@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://linux-kid-lab.sociobot.in/sitemap.xml

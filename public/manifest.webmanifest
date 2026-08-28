@@ -1,0 +1,15 @@
+{
+  "name": "Linux Kid Lab",
+  "short_name": "Kid Lab",
+  "description": "Pick short creative activities and save progress on this device.",
+  "start_url": "/?v=1",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f3e8cb",
+  "theme_color": "#f3e8cb",
+  "icons": [
+    {"src":"/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"/icon-512.png","sizes":"512x512","type":"image/png"},
+    {"src":"/icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ]
+}

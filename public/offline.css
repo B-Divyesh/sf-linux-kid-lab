@@ -1,0 +1,18 @@
+body {
+  max-width: 42rem;
+  margin: 12vh auto;
+  padding: 24px;
+  background: #f3e8cb;
+  color: #201c1b;
+  font: 18px/1.5 system-ui, sans-serif;
+}
+
+h1 {
+  font: 900 3rem/1 Arial, sans-serif;
+  text-transform: uppercase;
+}
+
+a {
+  color: #185b76;
+  font-weight: 800;
+}
