@@ -73,12 +73,24 @@ there is no publishable package or consumer-install check.
 
 ## Deployment and follow-up
 
-The configured deployment remains static: push `main` to publish `dist/` via
-the existing factory deployment. After the push, verify the live `/demo` is
-served by the updated v5 worker, rerun the live open-tool link check, and
-compare the live `/assets/app.js` hash with the local `dist` asset.
+The configured static deployment artifact was built from `dist/` and `main`
+was pushed to `origin` at `cc2f336`. The factory's public edge had not
+propagated during the repair window: repeated checks still returned the prior
+`linux-kid-lab-v4` worker and app hash
+`49258e07141019ed27145265c7ea1eaee6cd8b2b33bdb3add7e507b16fb0e46d`, rather
+than this repair's v5 worker and local app hash
+`eaf9bfcf4eb5af9562f6838789cf321a63f1dba492a61feb4c610e3cf9af2851`.
+The pushed repository is buildable and ready for the configured static
+publisher; once that external propagation completes, verify live `/demo`, the
+v5 worker, and the matching asset hash.
+
+Live response-policy smoke checks still passed: the Sociobot verification
+endpoint allowed only `https://linux-kid-lab.sociobot.in` as the browser
+origin, and a 40-request invalid-license burst returned 29 × 200 and 11 ×
+429. The repaired official Inkscape releases URL returned 200.
 
 There are no product-code known gaps. External tool websites necessarily need
 internet when a family chooses an open-tool link; every activity retains its
-paper path. Production billing registration and infrastructure remain factory
+paper path. The only remaining operational item is static-edge propagation;
+production billing registration and infrastructure remain factory
 responsibilities.
