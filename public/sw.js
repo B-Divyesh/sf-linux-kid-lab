@@ -1,4 +1,4 @@
-const VERSION = 'linux-kid-lab-v4';
+const VERSION = 'linux-kid-lab-v5';
 const SHELL = ['/', '/index.html', '/assets/app.js', '/assets/app.css', '/hero-cassette.avif', '/hero-cassette-640.avif', '/hero-cassette.webp', '/hero-cassette-640.webp', '/hero-cassette.jpg', '/favicon.svg', '/manifest.webmanifest', '/offline.html', '/offline.css'];
 
 self.addEventListener('install', event => {

@@ -44,6 +44,9 @@ export const toolLinks: Record<string, string> = {
   'LibreOffice':'https://www.libreoffice.org/',
   'Scratch':'https://scratch.mit.edu/projects/editor/',
   'Krita':'https://krita.org/',
-  'Inkscape':'https://inkscape.org/',
+  // The project site was intermittently unavailable during release verification.
+  // This is Inkscape's official GitHub releases destination and gives families a
+  // working, maintained place to get the tool.
+  'Inkscape':'https://github.com/inkscape/inkscape/releases/latest',
   'Stellarium':'https://stellarium.org/'
 };

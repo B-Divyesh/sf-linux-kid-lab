@@ -24,12 +24,13 @@ test('@claim:twenty-activities the free shelf contains 20 activities', async ({ 
   await expect(page.getByText('20 activities', { exact: true })).toBeVisible();
 });
 
-test('@claim:three-steps every activity card opens three steps', async ({ page }) => {
-  await page.goto('/demo');
-  const cards = page.locator('.activity-card');
-  const count = await cards.count();
-  for (let index = 0; index < count; index += 1) {
-    await cards.nth(index).getByRole('button').click();
+test('@claim:three-steps every one of the 20 activity cards opens three steps', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Ages 11–13' }).click();
+  const activityIds = await page.locator('[data-open]').evaluateAll(buttons => buttons.map(button => button.getAttribute('data-open')));
+  expect(activityIds).toHaveLength(20);
+  for (const id of activityIds) {
+    await page.locator(`[data-open="${id}"]`).click();
     await expect(page.locator('.activity-steps li')).toHaveCount(3);
     await page.getByRole('button', { name: 'Close activity' }).click();
   }
@@ -70,6 +71,61 @@ test('@claim:json-export exports progress as JSON', async ({ page }) => {
   expect(Object.keys(data.completed)).toHaveLength(3);
 });
 
+test('@claim:json-import imports valid progress and applies it to the shelf', async ({ page }) => {
+  await page.goto('/settings?demo=1');
+  const imported = {
+    version: 1,
+    bands: ['5–7'],
+    completed: { 'shape-creature': '2026-08-28' },
+    twists: { 'shape-creature': 2 }
+  };
+  await page.locator('#import-file').setInputFiles({
+    name: 'linux-kid-lab-progress.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(imported))
+  });
+  await expect(page.getByRole('status')).toContainText('Progress imported.');
+  await page.goto('/demo');
+  await expect(page.locator('.activity-card')).toHaveCount(7);
+  await expect(page.locator('[data-open="shape-creature"]').locator('..').locator('.stamp')).toContainText('Made');
+});
+
+test('@claim:open-tool-suggestion every activity has a working official tool link', async ({ page, request }) => {
+  const officialToolUrls = new Set([
+    'https://tuxpaint.org/',
+    'https://www.audacityteam.org/',
+    'https://www.piskelapp.com/',
+    'https://www.libreoffice.org/',
+    'https://scratch.mit.edu/projects/editor/',
+    'https://krita.org/',
+    'https://github.com/inkscape/inkscape/releases/latest',
+    'https://stellarium.org/'
+  ]);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Ages 11–13' }).click();
+  const activityIds = await page.locator('[data-open]').evaluateAll(buttons => buttons.map(button => button.getAttribute('data-open')));
+  expect(activityIds).toHaveLength(20);
+  const usedUrls = new Set<string>();
+  for (const id of activityIds) {
+    await page.locator(`[data-open="${id}"]`).click();
+    const links = page.locator('.tool-row a');
+    expect(await links.count(), `${id} needs an open-tool suggestion`).toBeGreaterThan(0);
+    for (let index = 0; index < await links.count(); index += 1) {
+      const href = await links.nth(index).getAttribute('href');
+      expect(href, `${id} must use an approved official destination`).not.toBeNull();
+      expect(officialToolUrls.has(href!)).toBe(true);
+      usedUrls.add(href!);
+    }
+    await page.getByRole('button', { name: 'Close activity' }).click();
+  }
+  expect(usedUrls).toEqual(officialToolUrls);
+  for (const url of officialToolUrls) {
+    const response = await request.get(url, { failOnStatusCode: false, maxRedirects: 5, timeout: 20_000 });
+    expect(response.status(), `${url} must be reachable from the shipped open-tool link`).toBeGreaterThanOrEqual(200);
+    expect(response.status(), `${url} must be reachable from the shipped open-tool link`).toBeLessThan(400);
+  }
+});
+
 test('@claim:print-tokens completed activities produce printable tokens', async ({ page }) => {
   await page.goto('/demo');
   await page.getByRole('link', { name: 'Print progress tokens' }).click();
@@ -94,7 +150,7 @@ test('@claim:offline-reload the demo reloads after the network is disabled', asy
   await page.reload();
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   const cachedBytes = await page.evaluate(async () => {
-    const cache = await caches.open('linux-kid-lab-v4');
+    const cache = await caches.open('linux-kid-lab-v5');
     const js = await cache.match('/assets/app.js');
     const css = await cache.match('/assets/app.css');
     return { js: (await js?.text())?.length ?? 0, css: (await css?.text())?.length ?? 0 };
@@ -134,6 +190,13 @@ test('@claim:paid-pack license verification activates the paid print pack', asyn
   await expect(page.getByText('Pack active on this device')).toBeVisible();
   await page.getByRole('link', { name: 'Print the activity pack' }).click();
   await expect(page.locator('.print-card-grid article')).toHaveCount(20);
+  await expect(page.getByRole('heading', { name: 'Four-week weekend mix' })).toBeVisible();
+  await expect(page.locator('.weekend-mix li')).toHaveText([
+    'Week 1: Shape creature and maze message',
+    'Week 2: Loop beat and secret alphabet',
+    'Week 3: Moon postcard and one-button toy',
+    'Week 4: Paper controller and remix rules'
+  ]);
 });
 
 test('privacy, terms, and unknown routes have distinct titles and one h1', async ({ page }) => {

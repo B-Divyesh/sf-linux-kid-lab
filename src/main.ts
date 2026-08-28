@@ -53,7 +53,7 @@ function header() {
 function footer() {
   return `<footer><p><strong>Linux Kid Lab</strong> — short local activities for young makers.</p>
     <nav aria-label="Footer navigation"><a href="/privacy" data-nav>Privacy</a><a href="/terms" data-nav>Terms</a><a href="https://hello-factory.sociobot.in/" rel="external">Built by Param Factory <span class="sr-only">(external)</span></a></nav>
-    <p>Version 1.0.0 · Generated illustration disclosed in the <a href="https://github.com/B-Divyesh/sf-linux-kid-lab" rel="external">project notes <span class="sr-only">(external)</span></a>.</p></footer>`;
+    <p>Version 1.0.1 · Generated illustration disclosed in the <a href="https://github.com/B-Divyesh/sf-linux-kid-lab" rel="external">project notes <span class="sr-only">(external)</span></a>.</p></footer>`;
 }
 
 function shell(content: string) {
