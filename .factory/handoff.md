@@ -1,5 +1,16 @@
 # Linux Kid Lab — build handoff
 
+## Independent verification status (2026-08-28): **FAIL**
+
+Candidate `c79b8e323b952ff4834fcb3c6b233ffaaaf421e9` was independently tested
+against https://linux-kid-lab.sociobot.in. Although the full test suite passed
+(12/12), release is blocked by a live HTTP 502 Inkscape activity link and by
+claims-contract gaps: JSON import is promised without a registered claim test,
+and the three-steps and paid-pack claim tests do not assert every part of their
+published promises. See `.factory/verification.md` for exact commands,
+evidence, severity, deployment hashes, PWA/privacy/accessibility results, and
+repair/reverification steps.
+
 Work order: `linux-kid-lab-build-1`
 
 Completed: 28 August 2026
