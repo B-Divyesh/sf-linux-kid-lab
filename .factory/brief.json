@@ -1,0 +1,13 @@
+{
+  "slug": "linux-kid-lab",
+  "title": "Linux Kid Lab",
+  "summary": "Pick 20 short creative activities for children on a Linux family computer.",
+  "territory": "games-creative",
+  "user": "Parents using Linux who need a calm, age-progressive set of local creative activities after a child outgrows a first educational app.",
+  "smallest_useful_product": "A local-first web launcher with 20 short open activities, parent-selected age bands, no ads, printable progress tokens, and links to installed tools.",
+  "success_measure": "In ten household trials, six children independently return to a second activity on three separate days.",
+  "artifact_class": "pwa-offline",
+  "monetization": "one-time — parents can buy a curated offline pack; no data business is needed.",
+  "constraints": "No behavioral data or chat; clearly license any linked/open assets; keep all copy age-appropriate and accessible.",
+  "state": "RESEARCHED"
+}
