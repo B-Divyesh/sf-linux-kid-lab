@@ -37,6 +37,19 @@ test('@claim:three-steps every one of the 20 activity cards opens three steps', 
   }
 });
 
+test('@claim:paper-alternatives every activity includes a paper alternative', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Ages 5–7' }).click();
+  const activityIds = await page.locator('[data-open]').evaluateAll(buttons => buttons.map(button => button.getAttribute('data-open')));
+  expect(activityIds).toHaveLength(20);
+  for (const id of activityIds) {
+    await page.locator(`[data-open="${id}"]`).click();
+    await expect(page.locator('.paper-alternative')).toContainText('Paper alternative');
+    await expect(page.locator('.paper-alternative p')).not.toBeEmpty();
+    await page.getByRole('button', { name: 'Close activity' }).click();
+  }
+});
+
 test('@claim:local-progress completed activities survive a reload', async ({ page }) => {
   await page.goto('/demo');
   const card = page.locator('[data-open="maze-message"]').locator('..');
@@ -51,11 +64,29 @@ test('@claim:local-progress completed activities survive a reload', async ({ pag
 test('@claim:demo-sandbox demo progress is isolated and resettable', async ({ page }) => {
   await page.goto('/demo');
   await expect(page.locator('.progress-strip strong')).toHaveText('3 of 20');
+  await page.getByRole('link', { name: 'Parent setup' }).click();
+  await page.getByRole('button', { name: 'Clear sample progress' }).click();
+  await expect(page.getByRole('status')).toContainText('Sample progress cleared.');
+  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
+  await expect(page.locator('.progress-strip strong')).toHaveText('0 of 20');
+  await page.getByRole('link', { name: 'Demo' }).click();
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await expect(page.locator('.progress-strip strong')).toHaveText('3 of 20');
   await page.getByRole('button', { name: 'Start for real' }).click();
   await expect(page).toHaveURL('/');
   await expect(page.locator('.progress-strip strong')).toHaveText('0 of 20');
+});
+
+test('@claim:demo-indexeddb demo data uses its own IndexedDB database', async ({ page }) => {
+  await page.goto('/demo');
+  const beforeLeaving = await page.evaluate(async () => (await indexedDB.databases()).map(database => database.name));
+  expect(beforeLeaving).toContain('demo:linux-kid-lab');
+  expect(beforeLeaving).not.toContain('linux-kid-lab');
+  await page.getByRole('button', { name: 'Start for real' }).click();
+  await expect(page.locator('.progress-strip strong')).toHaveText('0 of 20');
+  const afterLeaving = await page.evaluate(async () => (await indexedDB.databases()).map(database => database.name));
+  expect(afterLeaving).toContain('linux-kid-lab');
+  expect(afterLeaving).not.toContain('demo:linux-kid-lab');
 });
 
 test('@claim:json-export exports progress as JSON', async ({ page }) => {
@@ -89,6 +120,19 @@ test('@claim:json-import imports valid progress and applies it to the shelf', as
   await page.goto('/demo');
   await expect(page.locator('.activity-card')).toHaveCount(7);
   await expect(page.locator('[data-open="shape-creature"]').locator('..').locator('.stamp')).toContainText('Made');
+});
+
+test('@claim:clear-progress parents can clear saved progress', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('[data-open="maze-message"]').click();
+  await page.getByRole('button', { name: 'Stamp it made' }).click();
+  await expect(page.locator('.progress-strip strong')).toHaveText('1 of 20');
+  await page.getByRole('link', { name: 'Parent setup' }).click();
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Clear saved progress' }).click();
+  await expect(page.getByRole('status')).toContainText('Saved progress cleared.');
+  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
+  await expect(page.locator('.progress-strip strong')).toHaveText('0 of 20');
 });
 
 test('@claim:open-tool-suggestion every activity has a working official tool link', async ({ page, request }) => {
@@ -151,7 +195,7 @@ test('@claim:offline-reload the demo reloads after the network is disabled', asy
   await page.reload();
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   const cachedBytes = await page.evaluate(async () => {
-    const cache = await caches.open('linux-kid-lab-v6');
+    const cache = await caches.open('linux-kid-lab-v7');
     const keys = await cache.keys();
     const assets = keys.filter(key => /\/assets\/.*\.(js|css)$/.test(new URL(key.url).pathname));
     return Promise.all(assets.map(async asset => (await (await cache.match(asset))?.text())?.length ?? 0));
@@ -259,7 +303,7 @@ test('invalid license recovery remains open and visible', async ({ page }) => {
   await expect(page.getByText('This license is not active. Check the token or use the buy link.')).toBeVisible();
 });
 
-test('an unavailable purchase setup never renders a dead checkout link', async ({ page }) => {
+test('@claim:purchase-setup an unavailable purchase setup does not show a dead checkout link', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('Purchase setup is unavailable right now. The free shelf and progress tokens remain available.')).toBeVisible();
   await expect(page.locator('a[href*="api.sociobot.in/api/v1/products/linux-kid-lab/checkout"]')).toHaveCount(0);
@@ -271,6 +315,29 @@ test('static deployment config gives unknown paths a real 404 and hashes get imm
   expect(config.responseOverrides['404']).toEqual({ rewrite: '/404.html', statusCode: 404 });
   expect(config.routes.slice(0, 7).map((route: { route: string }) => route.route)).toEqual(['/', '/demo', '/settings', '/privacy', '/terms', '/print', '/404']);
   expect(config.routes.find((route: { route: string }) => route.route === '/assets/*').headers['Cache-Control']).toBe('public, max-age=31536000, immutable');
+});
+
+test('a real static 404 keeps its cassette styling under style-src self without a CSP console error', async ({ page }) => {
+  const pageErrors: string[] = [];
+  const notFound = readFileSync('public/404.html', 'utf8');
+  const styles = readFileSync('public/404.css', 'utf8');
+  page.on('console', message => { if (message.type() === 'error') pageErrors.push(message.text()); });
+  await page.route('**/missing-tape', route => route.fulfill({
+    status: 404,
+    contentType: 'text/html',
+    headers: { 'Content-Security-Policy': "default-src 'self'; style-src 'self'" },
+    body: notFound
+  }));
+  await page.route('**/404.css', route => route.fulfill({ status: 200, contentType: 'text/css', body: styles }));
+  const response = await page.goto('/missing-tape');
+  expect(response?.status()).toBe(404);
+  await expect(page.locator('style')).toHaveCount(0);
+  await expect(page.locator('link[rel="stylesheet"]')).toHaveAttribute('href', '/404.css');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('This tape has no activity');
+  await expect(page.locator('.tape')).toHaveCSS('color', 'rgb(184, 46, 46)');
+  // Chromium reports an HTTP 404 navigation as a resource error. It is not a
+  // page error; the regression is for the previously emitted CSP error.
+  expect(pageErrors.filter(error => !error.includes('server responded with a status of 404'))).toEqual([]);
 });
 
 test('dark system theme has no serious axe issues on every product route', async ({ page }) => {

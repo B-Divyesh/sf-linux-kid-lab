@@ -21,6 +21,17 @@ const isLicensed = () => {
   catch { return false; }
 };
 
+function paperAlternative(kind: Activity['kind']) {
+  const alternatives: Record<Activity['kind'], string> = {
+    Draw: 'Use pencils, crayons, or cut paper instead of the suggested tool.',
+    Code: 'Use paper cards, arrows, or a drawing to act out the instructions.',
+    Sound: 'Mark beats or sound symbols on paper, then perform the pattern without recording.',
+    Story: 'Write or draw the story on paper instead of using an app.',
+    Build: 'Use paper, a pencil, and safe household objects to make the plan.'
+  };
+  return alternatives[kind];
+}
+
 function routePath() {
   const known = ['/', '/demo', '/settings', '/privacy', '/terms', '/print', '/404'];
   return known.includes(location.pathname) ? location.pathname : '/404';
@@ -142,6 +153,7 @@ function activityDialog(activity: Activity) {
   return `<div class="dialog-backdrop"><section class="activity-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabindex="-1">
     <button class="dialog-close" aria-label="Close activity" data-action="close-dialog">×</button><span class="kicker">Ages ${activity.band} · ${activity.minutes} minutes · ${activity.kind}</span><h2 id="dialog-title">${escapeHtml(activity.title)}</h2><p>${escapeHtml(activity.intro)}</p>
     <ol class="activity-steps">${activity.steps.map((s,i) => `<li><span>${i+1}</span>${escapeHtml(s)}</li>`).join('')}</ol>
+    <aside class="paper-alternative"><strong>Paper alternative</strong><p>${escapeHtml(paperAlternative(activity.kind))}</p></aside>
     <div class="twist"><span class="eyebrow">Try this twist</span><p>${escapeHtml(activity.twists[twistIndex % activity.twists.length])}</p><button class="text-button" data-action="new-twist">Give me another twist</button></div>
     <div class="tool-row"><span>Suggested open tool:</span>${activity.tools.map(tool => `<a href="${toolLinks[tool]}" rel="external">Open ${tool} <span class="sr-only">(external)</span></a>`).join('')}<small>Paper works too. External tool links may need internet.</small></div>
     <button class="button primary complete-button" data-action="complete">${done ? 'Made it again' : 'Stamp it made'}</button>
@@ -151,7 +163,7 @@ function activityDialog(activity: Activity) {
 function settingsPage() {
   return shell(`<main id="main" class="narrow-page"><span class="kicker">Parent setup</span><h1 tabindex="-1">Choose what appears on the shelf</h1><p>These choices stay in this browser. Children can still change filters on the shelf.</p>
     <section aria-labelledby="age-heading"><h2 id="age-heading">Age bands</h2><form id="settings-form" class="band-list">${bands.map(b => `<label><input type="checkbox" name="band" value="${b}" ${state.bands.includes(b) ? 'checked' : ''}><span><strong>Ages ${b}</strong><small>${activities.filter(a=>a.band===b).length} activities</small></span></label>`).join('')}<button class="button primary" type="submit">Save age bands</button></form></section>
-    <section aria-labelledby="data-heading"><h2 id="data-heading">Move or clear your data</h2><div class="data-actions"><button class="button secondary" data-action="export">Export progress as JSON</button><label class="button secondary file-button">Import progress<input id="import-file" type="file" accept="application/json"></label><button class="danger-button" data-action="reset-real">Clear saved progress</button></div><p class="error" role="alert">${escapeHtml(importError)}</p></section>
+    <section aria-labelledby="data-heading"><h2 id="data-heading">Move or clear your data</h2><div class="data-actions"><button class="button secondary" data-action="export">Export progress as JSON</button><label class="button secondary file-button">Import progress<input id="import-file" type="file" accept="application/json"></label><button class="danger-button" data-action="${demo ? 'clear-demo-progress' : 'reset-real'}">${demo ? 'Clear sample progress' : 'Clear saved progress'}</button></div><p class="error" role="alert">${escapeHtml(importError)}</p></section>
     <section aria-labelledby="tools-heading"><h2 id="tools-heading">Open tools</h2><p>Activity cards link to official open-tool websites. Install the tools you want through your Linux software app.</p><ul class="tool-list">${Object.entries(toolLinks).map(([name,url]) => `<li><a href="${url}" rel="external">${name} <span class="sr-only">(external)</span></a></li>`).join('')}</ul></section>
   </main>`);
 }
@@ -259,6 +271,7 @@ function bindEvents() {
     if (action === 'new-twist' && activeActivity) { state.twists[activeActivity.id] = ((state.twists[activeActivity.id] ?? 0) + 1) % 3; await saveState(state,demo); render(); }
     if (action === 'complete' && activeActivity) { state.completed[activeActivity.id] = new Date().toISOString().slice(0,10); await saveState(state,demo); const title=activeActivity.title; activeActivity=null; announce(`${title} is stamped made.`); }
     if (action === 'reset-demo') { await clearDemo(); localStorage.removeItem(`demo:sb_license:${slug}`); localStorage.removeItem(`demo:sb_license_status:${slug}`); state=demoState(); await saveState(state,true); announce('Sample data reset.'); }
+    if (action === 'clear-demo-progress') { state={...state,completed:{},twists:{}}; await saveState(state,true); announce('Sample progress cleared.'); }
     if (action === 'start-real') { await clearDemo(); localStorage.removeItem(`demo:sb_license:${slug}`); localStorage.removeItem(`demo:sb_license_status:${slug}`); go('/'); }
     if (action === 'export') exportData();
     if (action === 'reset-real' && confirm('Clear every completed activity and age choice on this device?')) { state=freshState(); await saveState(state,false); announce('Saved progress cleared.'); }

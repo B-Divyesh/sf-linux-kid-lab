@@ -14,15 +14,15 @@ database and never change the real shelf.
 ## What is included
 
 - 20 free activities for ages 5–13 across drawing, code, sound, stories, and building
-- Parent-selected age bands and child-friendly filters
+- Parent-selected age bands and filters
 - Local progress, JSON export/import, and printable progress tokens
 - Offline use after the first connected visit
 - Optional links to Tux Paint, Scratch, Krita, Audacity, and other open tools
 - An optional printable pack for active Sociobot licenses
 
 An active printable-pack license adds cut-out activity cards and a four-week
-weekend mix. All activities, progress features, export, and accessibility
-features remain free. Purchase setup is not currently available in the app.
+weekend mix. The free shelf keeps the 20 activities and progress tokens.
+Purchase setup is not currently available in the app.
 
 ## Run and verify
 
@@ -46,8 +46,8 @@ Claim-specific commands are listed in [.factory/claims.json](.factory/claims.jso
 ## Data and payment
 
 Activity data lives in IndexedDB. Parent setup can export, import, or clear it.
-License tokens live in namespaced local storage and are sent only to the
-Sociobot license verification endpoint. Sociobot is the merchant of record.
+License verification sends a token only to the Sociobot license verification
+endpoint after a parent chooses to verify it. Sociobot is the merchant of record.
 See `/privacy` and `/terms` in the app.
 
 ## Deploy

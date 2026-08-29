@@ -1,5 +1,5 @@
-const VERSION = 'linux-kid-lab-v6';
-const SHELL = ['/', '/index.html', '/demo', '/settings', '/privacy', '/terms', '/print', '/hero-cassette.avif', '/hero-cassette-640.avif', '/hero-cassette.webp', '/hero-cassette-640.webp', '/hero-cassette.jpg', '/favicon.svg', '/manifest.webmanifest', '/offline.html', '/offline.css'];
+const VERSION = 'linux-kid-lab-v7';
+const SHELL = ['/', '/index.html', '/demo', '/settings', '/privacy', '/terms', '/print', '/404.html', '/404.css', '/hero-cassette.avif', '/hero-cassette-640.avif', '/hero-cassette.webp', '/hero-cassette-640.webp', '/hero-cassette.jpg', '/favicon.svg', '/manifest.webmanifest', '/offline.html', '/offline.css'];
 
 async function appAssets() {
   const page = await fetch(new Request('/index.html', { cache: 'reload' }));
