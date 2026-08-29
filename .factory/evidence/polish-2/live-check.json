@@ -1,0 +1,204 @@
+{
+  "checkedAt": "2026-08-29T11:17:40.800Z",
+  "base": "https://linux-kid-lab.sociobot.in",
+  "routes": [
+    {
+      "path": "/",
+      "status": 200,
+      "title": "Linux Kid Lab — Pick local creative activities",
+      "canonical": "https://linux-kid-lab.sociobot.in/",
+      "h1": 1,
+      "main": 1,
+      "privacy": 1,
+      "terms": 1,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "path": "/?demo=1",
+      "status": 200,
+      "title": "Demo — Linux Kid Lab",
+      "canonical": "https://linux-kid-lab.sociobot.in/demo",
+      "h1": 1,
+      "main": 1,
+      "privacy": 1,
+      "terms": 1,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "path": "/demo",
+      "status": 200,
+      "title": "Demo — Linux Kid Lab",
+      "canonical": "https://linux-kid-lab.sociobot.in/demo",
+      "h1": 1,
+      "main": 1,
+      "privacy": 1,
+      "terms": 1,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "path": "/settings",
+      "status": 200,
+      "title": "Parent setup — Linux Kid Lab",
+      "canonical": "https://linux-kid-lab.sociobot.in/settings",
+      "h1": 1,
+      "main": 1,
+      "privacy": 1,
+      "terms": 1,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "path": "/privacy",
+      "status": 200,
+      "title": "Privacy — Linux Kid Lab",
+      "canonical": "https://linux-kid-lab.sociobot.in/privacy",
+      "h1": 1,
+      "main": 1,
+      "privacy": 1,
+      "terms": 1,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "path": "/terms",
+      "status": 200,
+      "title": "Terms — Linux Kid Lab",
+      "canonical": "https://linux-kid-lab.sociobot.in/terms",
+      "h1": 1,
+      "main": 1,
+      "privacy": 1,
+      "terms": 1,
+      "overflow": 0,
+      "errors": []
+    },
+    {
+      "path": "/print",
+      "status": 200,
+      "title": "Print tokens — Linux Kid Lab",
+      "canonical": "https://linux-kid-lab.sociobot.in/print",
+      "h1": 1,
+      "main": 1,
+      "privacy": 1,
+      "terms": 1,
+      "overflow": 0,
+      "errors": []
+    }
+  ],
+  "axe": [
+    {
+      "scheme": "light",
+      "path": "/",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "light",
+      "path": "/?demo=1",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "light",
+      "path": "/demo",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "light",
+      "path": "/settings",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "light",
+      "path": "/privacy",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "light",
+      "path": "/terms",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "light",
+      "path": "/print",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "dark",
+      "path": "/",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "dark",
+      "path": "/?demo=1",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "dark",
+      "path": "/demo",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "dark",
+      "path": "/settings",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "dark",
+      "path": "/privacy",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "dark",
+      "path": "/terms",
+      "seriousCritical": 0
+    },
+    {
+      "scheme": "dark",
+      "path": "/print",
+      "seriousCritical": 0
+    }
+  ],
+  "demo": {
+    "ctaBottom": 712.15625,
+    "cards": 13,
+    "reset": "3 of 20",
+    "realProgressDuringDemo": 0,
+    "dbBefore": [
+      "demo:linux-kid-lab",
+      "linux-kid-lab"
+    ],
+    "dbAfter": [
+      "linux-kid-lab"
+    ],
+    "banner": true,
+    "queryEntry": true
+  },
+  "privacy": {
+    "origins": [
+      "https://linux-kid-lab.sociobot.in"
+    ]
+  },
+  "offline": {
+    "controlled": true,
+    "heading": "Pick the sample family’s next activity",
+    "cards": 13
+  },
+  "focus": {
+    "settingsFocused": true,
+    "homeFocused": true,
+    "announcement": "Pick one creative activity after school",
+    "scrollY": 0
+  },
+  "notFound": {
+    "status": 404,
+    "title": "Page not found — Linux Kid Lab",
+    "h1": 1,
+    "main": 1,
+    "canonical": "https://linux-kid-lab.sociobot.in/404",
+    "privacy": 1,
+    "terms": 1,
+    "manifest": 1,
+    "errors": []
+  }
+}
