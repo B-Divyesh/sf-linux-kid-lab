@@ -1,69 +1,45 @@
-# Linux Kid Lab — polish 1 handoff
+# Linux Kid Lab — verification 7 handoff
 
 ## Result
 
-Repair commit `91b48ae7372fd3e3a54824c1b5300401a06f3d53` for review commit
-`2b1494e33e9b7e8aa3f9ec4018a933fc62822d57`.
-The unpurchasable optional pack was removed rather than advertised without a
-checkout. Linux Kid Lab remains an offline, local-first PWA with the original
-cassette-zine visual system.
+**PASS** for candidate `1158ffffb4003a5165a2febf60c792f3d3ae7e57` at
+<https://linux-kid-lab.sociobot.in> on 29 August 2026.
 
-## What changed
+Independent evidence is in `.factory/verification-7.md`. Production matches
+the candidate byte-for-byte for the sampled release files. No product code was
+changed during verification.
 
-- `/demo` and `/?demo=1` now both open the isolated, pre-filled sample shelf.
-  The persistent banner offers **Reset demo** and **Start for real**.
-- Removed every paid-pack, license, merchant, and refund promise from the app,
-  README, terms, claims, tests, data flow, and CSP.
-- Rewrote the reviewed headings and README in direct language. The complete,
-  current copy audit is in `.factory/copy-audit.md`.
-- Rebuilt the static HTTP 404 as a full cassette-zine product page with skip
-  link, header, navigation, footer, legal links, title, canonical URL,
-  description, Open Graph/Twitter metadata, and favicon.
-- Added and reconciled `.factory/claims.json` with 15 one-to-one Playwright
-  claim tests. Version is 1.0.4; the service-worker cache is v10.
+## Verification summary
 
-## Local evidence
+- `npm ci`: passed, 0 vulnerabilities.
+- All 15 exact `.factory/claims.json` commands: passed.
+- `npm test`: passed, 51/51 in 1.4 minutes.
+- `npm run build`: passed; TypeScript and Vite produced `dist/`.
+- Mandatory cold first-read and one-click sample demo: passed.
+- Live normal, boundary, invalid-import, persistence, reset, and demo-isolation
+  flows: passed with only same-origin requests.
+- Desktop and 390 px mobile, keyboard, focus, dark mode, reduced motion,
+  44 px targets, and axe serious/critical checks: passed.
+- Live service-worker control, offline reload, and update notification: passed.
+- Security headers, cache policy, real 404, manifest/icons, and link crawl:
+  passed.
+- Lighthouse mobile: 100 Performance, 100 Accessibility, 100 Best Practices,
+  100 SEO; LCP 1.07 s, TBT 3 ms, CLS 0.
+- Bundles: 10.13 kB gzip JS, 4.61 kB gzip CSS, 29.75 kB mobile hero.
 
-- Clean dependency install: `npm ci` — passed, 0 vulnerabilities.
-- Production build: `npm run build` — passed; `dist/index.html` is present.
-  Initial JavaScript is 10.13 kB gzip and CSS is 4.61 kB gzip.
-- Complete browser suite: `npm test` — **51 passed** in 50.6 seconds.
-- Every literal claim command from `.factory/claims.json` — **15/15 passed**.
-  The claim-tag audit also confirms exactly one test for each claim.
-- Accessibility and responsive checks are part of the 51-test run: axe found
-  no serious or critical issues across 28 route/theme/viewport checks; keyboard
-  dialog behavior, reduced motion, 44px targets, mobile reflow, titles, h1,
-  and main landmarks passed.
-- Offline verification: `@claim:offline-reload` passed after service-worker
-  control and `context.setOffline(true)` reload.
-- Privacy verification: `@claim:local-privacy` passed with only same-origin
-  requests during demo use.
-- Local visual evidence:
-  `.factory/verification-artifacts/polish-1/landing-mobile.png` and
-  `.factory/verification-artifacts/polish-1/demo-desktop.png`.
+## Findings
 
-## Deployment and cold live evidence
+- **Medium, nonblocking:** the researched one-time curated pack is not shipped.
+  The complete 20-activity core is free and makes no unavailable purchase
+  promise.
+- **Low:** `.factory/demo.md` retains two stale license references even though
+  candidate 1.0.4 has no license flow.
 
-- Deployed `dist/` with the factory static deploy configuration on 29 August
-  2026. Azure deployment `bda43591-af64-4a8f-837d-5f69be08e1f3` completed
-  successfully to `https://lemon-bay-084d0d310.7.azurestaticapps.net`, with
-  the custom domain ready at `https://linux-kid-lab.sociobot.in`.
-- Factory URL verification on a cold live root load: HTTP 200, 603 ms, no
-  console/page errors, `lang="en"`, one h1, main landmark, zero missing image
-  alt attributes, and zero unlabeled buttons. Evidence:
-  `.factory/verification-artifacts/polish-1/live-root/verify.json`.
-- Cold live browser checks: `/`, `/?demo=1`, `/demo`, `/privacy`, and `/terms`
-  each returned 200 with the expected route title, one h1/main, and no console
-  errors. `/?demo=1` and `/demo` both showed the demo banner and **Reset demo**.
-  `/missing-tape` returned HTTP 404 with its static title, one h1/main, and no
-  console errors.
-- Live `/?demo=1` serious/critical axe check found zero violations. Screenshot:
-  `.factory/verification-artifacts/polish-1/live-demo/screenshot-desktop.png`.
-- Live Lighthouse (mobile): performance **100**, accessibility **100**, LCP
-  **1,050 ms**, and CLS **0**. Evidence:
-  `.factory/verification-artifacts/polish-1/lighthouse-live.json`.
+There is no backend, sign-in, runtime AI, product-unlock endpoint, library, or
+CLI. Rate-limit, Entra, AI gateway, backend concurrency, and package-consumer
+checks do not apply.
 
-## Run again
+## Reproduce
 
 ```sh
 npm ci
@@ -71,9 +47,12 @@ npm test
 npm run build
 ```
 
-Run every `test` value in `.factory/claims.json` for the individual claim
-commands. Open `/demo` or `/?demo=1` to enter the isolated sample shelf.
+Run each `test` value in `.factory/claims.json` for the individual claim gate.
+Open `/demo` for the isolated sample and inspect `.factory/evidence/` for live
+screenshots, the verifier output, claim JSON, and Lighthouse report.
 
-## Remaining work
+## Next steps
 
-No known gaps.
+1. Remove the two obsolete license sentences from `.factory/demo.md`.
+2. Treat a paid offline pack as separate scope; register it with Sociobot
+   billing before adding any purchase copy or runtime license code.
