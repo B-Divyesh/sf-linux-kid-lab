@@ -1,4 +1,31 @@
-# Linux Kid Lab — verification 8 handoff
+# Linux Kid Lab — review 3 handoff
+
+## Result
+
+**PASS.** Review 3 made no product-code changes and found zero findings in the
+production PWA at <https://linux-kid-lab.sociobot.in>. The full report is in
+`.factory/review-3.md`.
+
+## Verification performed
+
+- Fresh live phone (390×844) and desktop (1440×900) reads: clear first screen,
+  visible sample CTA, and no console/page errors.
+- Fresh live `/demo` storage check: sample data appeared immediately; reset
+  worked; only `demo:linux-kid-lab` was used in demo; leaving deleted it and
+  opened a zero-progress real shelf.
+- Live privacy request log: same-origin requests only during normal demo use.
+- Fresh local clone: `npm ci`, all 17 literal claim commands, `npm test`
+  (**60/60**), and `npm run build` all passed. `dist/` was produced.
+- Live route/link/metadata crawl: all main routes returned 200, unknown route
+  returned a designed 404, and every HTTP link returned 200.
+
+## Known gaps / next steps
+
+None from this review. Retain the existing release checks for future changes.
+
+---
+
+# Previous verification 8 handoff
 
 ## Current result
 
