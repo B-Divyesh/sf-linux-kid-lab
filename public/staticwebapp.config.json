@@ -20,5 +20,5 @@
     "Permissions-Policy":"camera=(), microphone=(), geolocation=()",
     "Content-Security-Policy":"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.sociobot.in; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://api.sociobot.in; frame-ancestors 'none'"
   },
-  "mimeTypes": {".webmanifest":"application/manifest+json"}
+  "mimeTypes": {".webmanifest":"application/manifest+json",".avif":"image/avif"}
 }

@@ -20,8 +20,8 @@ database and never change the real shelf.
 - Optional links to Tux Paint, Scratch, Krita, Audacity, and other open tools
 - An optional printable pack for active Sociobot licenses
 
-An active printable-pack license adds cut-out activity cards and a four-week
-weekend mix. The free shelf keeps the 20 activities and progress tokens.
+A one-time $12 printable-pack license adds cut-out activity cards and a
+four-week weekend mix. The free shelf keeps the 20 activities and progress tokens.
 Purchase setup is not currently available in the app.
 
 ## Run and verify

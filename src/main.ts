@@ -1,4 +1,5 @@
 import './styles.css';
+import packageMetadata from '../package.json';
 import { activities, bands, toolLinks, type Activity, type Band } from './activities';
 import { clearDemo, demoState, freshState, loadState, saveState, type LabState } from './storage';
 
@@ -62,9 +63,9 @@ function header() {
 }
 
 function footer() {
-  return `<footer><p><strong>Linux Kid Lab</strong> — short local activities for young makers.</p>
+  return `<footer><p><strong>Linux Kid Lab</strong> offers short local activities for young makers.</p>
     <nav aria-label="Footer navigation"><a href="/privacy" data-nav>Privacy</a><a href="/terms" data-nav>Terms</a><a href="https://hello-factory.sociobot.in/" rel="external">Built by Param Factory <span class="sr-only">(external)</span></a></nav>
-    <p>Version 1.0.1 · Generated illustration disclosed in the <a href="https://github.com/B-Divyesh/sf-linux-kid-lab" rel="external">project notes <span class="sr-only">(external)</span></a>.</p></footer>`;
+    <p>Version ${packageMetadata.version}. Generated illustration details are in the <a href="https://github.com/B-Divyesh/sf-linux-kid-lab" rel="external">project notes <span class="sr-only">(external)</span></a>.</p></footer>`;
 }
 
 function shell(content: string) {
@@ -123,7 +124,7 @@ function landing() {
         <div class="hero-action"><a class="button primary" href="/demo" data-nav>Try it with sample data</a><span>Loads a sample family’s activity shelf.</span></div>
         ${facts()}
       </div>
-      <figure class="hero-art"><picture><source srcset="/hero-cassette-640.avif 640w, /hero-cassette.avif 1024w" sizes="(max-width: 800px) calc(100vw - 64px), 520px" type="image/avif"><source srcset="/hero-cassette-640.webp 640w, /hero-cassette.webp 1024w" sizes="(max-width: 800px) calc(100vw - 64px), 520px" type="image/webp"><img src="/hero-cassette.jpg" width="1024" height="1024" alt="A cassette sends tape paths toward paper shapes, pixel art, and sound pads." fetchpriority="high" decoding="async"></picture><figcaption>One tape. Many ways to make.</figcaption></figure>
+      <figure class="hero-art"><picture><source srcset="/hero-cassette-640.avif 640w, /hero-cassette.avif 1024w" sizes="(max-width: 800px) calc(100vw - 64px), 520px" type="image/avif"><source srcset="/hero-cassette-640.webp 640w, /hero-cassette.webp 1024w" sizes="(max-width: 800px) calc(100vw - 64px), 520px" type="image/webp"><img src="/hero-cassette.jpg" width="1024" height="1024" alt="A cassette sends tape paths toward paper shapes, pixel art, and sound pads." fetchpriority="high" decoding="async"></picture><figcaption>The paths show drawing, coding, and sound activities.</figcaption></figure>
     </section>
     ${progressStrip()}
     ${activityShelf()}
@@ -141,7 +142,7 @@ function demoPage() {
 
 function paidSection() {
   const licensed = isLicensed();
-  return `<section class="paid-section" aria-labelledby="pack-heading"><div class="price-sticker"><span>PACK</span><small>licensed</small></div><div><span class="eyebrow">Optional take-home pack</span><h2 id="pack-heading">Print the whole activity deck</h2><p>The free shelf includes all 20 activities and progress tokens.</p><p>An active pack license adds cut-out activity cards and a four-week weekend mix.</p>
+  return `<section class="paid-section" aria-labelledby="pack-heading"><div class="price-sticker"><span>$12</span><small>one time</small></div><div><span class="eyebrow">Optional take-home pack</span><h2 id="pack-heading">Print the whole activity deck</h2><p>The free shelf includes all 20 activities and progress tokens.</p><p>A one-time $12 pack license adds cut-out activity cards and a four-week weekend mix.</p>
     ${licensed ? `<p class="license-ok">✓ Pack active on this device</p><a class="button primary" href="/print?pack=1" data-nav>Print the activity pack</a>` : `<p class="purchase-unavailable" role="status">Purchase setup is unavailable right now. The free shelf and progress tokens remain available.</p>`}
     <details ${licenseDetailsOpen ? 'open' : ''}><summary>Have a license?</summary><form id="license-form"><label for="license">Paste your license</label><div class="inline-form"><input id="license" name="license" autocomplete="off" required><button class="button secondary" type="submit" aria-label="Verify license">Verify license</button></div><p class="form-note">Verification uses Sociobot billing. The free shelf stays available offline.</p><p class="error" role="status">${escapeHtml(licenseNotice)}</p></form></details>
     <p class="legal-note">Sociobot is the merchant of record. Refunds are handled there. See <a href="/terms" data-nav>terms</a>.</p></div></section>`;
@@ -183,7 +184,7 @@ function privacyPage() {
 }
 
 function termsPage() {
-  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Terms for using Linux Kid Lab</h1><p>You may use the free activities at home, in a classroom, or in a community group.</p><h2>Parent supervision</h2><p>An adult decides which external tools and websites a child may open. Follow each tool’s own terms.</p><h2>Activity pack licenses</h2><p>An active pack license adds printable activity cards and a weekend mix. It does not remove the free activities or progress tokens.</p><p>Sociobot is the merchant of record. A refund revokes the pack license.</p><h2>No warranty</h2><p>The site is provided as available. Keep your exported copy if saved progress matters to you.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p></main>`);
+  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Terms for using Linux Kid Lab</h1><p>You may use the free activities at home, in a classroom, or in a community group.</p><h2>Parent supervision</h2><p>An adult decides which external tools and websites a child may open. Follow each tool’s own terms.</p><h2>Activity pack licenses</h2><p>A one-time $12 pack license adds printable activity cards and a weekend mix. It does not remove the free activities or progress tokens.</p><p>Sociobot is the merchant of record. A refund revokes the pack license.</p><h2>No warranty</h2><p>The site is provided as available. Keep your exported copy if saved progress matters to you.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p></main>`);
 }
 
 function notFoundPage() {
@@ -283,17 +284,24 @@ function bindEvents() {
   importFile?.addEventListener('change', () => importData(importFile.files?.[0]));
   const licenseForm = document.querySelector<HTMLFormElement>('#license-form');
   licenseForm?.addEventListener('submit', event => { event.preventDefault(); const token=String(new FormData(licenseForm).get('license')||'').trim(); if(token){ licenseDetailsOpen=true; localStorage.setItem(licenseTokenKey(),token); verifyLicense(token); } });
-  document.querySelector<HTMLElement>('.activity-dialog')?.addEventListener('keydown', trapDialogFocus);
 }
 
 function trapDialogFocus(event: KeyboardEvent) {
-  if (event.key === 'Escape') { closeActivity(); return; }
+  const dialog = document.querySelector<HTMLElement>('.activity-dialog');
+  if (!activeActivity || !dialog) return;
+  if (event.key === 'Escape') { event.preventDefault(); closeActivity(); return; }
   if (event.key !== 'Tab') return;
-  const dialog = document.querySelector<HTMLElement>('.activity-dialog')!;
-  const focusable = [...dialog.querySelectorAll<HTMLElement>('a,button,input,[tabindex]:not([tabindex="-1"])')];
+  const focusable = [...dialog.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),summary,[tabindex]:not([tabindex="-1"])')];
+  if (!focusable.length) { event.preventDefault(); dialog.focus(); return; }
   const first=focusable[0], last=focusable.at(-1)!;
-  if(event.shiftKey && document.activeElement===first){event.preventDefault();last.focus();}
-  if(!event.shiftKey && document.activeElement===last){event.preventDefault();first.focus();}
+  const focused = document.activeElement;
+  if (!dialog.contains(focused) || focused === dialog) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+    return;
+  }
+  if(event.shiftKey && focused===first){event.preventDefault();last.focus();}
+  if(!event.shiftKey && focused===last){event.preventDefault();first.focus();}
 }
 
 function exportData() {
@@ -336,4 +344,5 @@ async function start() {
 
 addEventListener('popstate', async () => { const nextDemo=location.pathname==='/demo'; if(nextDemo!==demo){demo=nextDemo;state=await loadState(demo);} activeActivity=null;render(true); });
 addEventListener('online',updateOnlineState); addEventListener('offline',updateOnlineState);
+addEventListener('keydown', trapDialogFocus);
 start();

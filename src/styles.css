@@ -21,6 +21,8 @@ progress.meter::-moz-progress-bar{background:var(--yellow)}
 .paper-alternative{border:2px dashed var(--ink);background:var(--paper);padding:14px 18px;margin:18px 0}.paper-alternative strong{display:block;text-transform:uppercase;letter-spacing:.08em;font-size:12px}.paper-alternative p{margin:6px 0 0}
 
 @media(max-width:800px){
+  a,button,input,summary,select,textarea,[tabindex]:not([tabindex="-1"]){min-width:44px;min-height:44px}
+  a,summary{display:inline-flex;align-items:center;vertical-align:middle}
   .hero{padding:32px 22px 48px;gap:24px}
   .hero .kicker{grid-row:1}.hero h1{grid-row:2}.hero .lede{grid-row:3}.hero .hero-action{grid-row:4}.hero .facts{grid-row:5}
   .hero-art{grid-row:6;margin:0 10px}

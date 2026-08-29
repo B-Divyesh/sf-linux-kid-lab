@@ -2,6 +2,8 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 
+const packageMetadata = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string };
+
 async function expectNoSeriousAxeIssues(page: Page) {
   const result = await new AxeBuilder({ page }).analyze();
   const serious = result.violations.filter(item => item.impact === 'serious' || item.impact === 'critical');
@@ -14,6 +16,9 @@ test('landing page explains the job and has a sound document outline', async ({ 
   await expect(page.locator('h1')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pick one creative activity after school');
   await expect(page.getByRole('link', { name: 'Try it with sample data' })).toBeVisible();
+  await expect(page.getByText('The paths show drawing, coding, and sound activities.')).toBeVisible();
+  await expect(page.getByText(`Version ${packageMetadata.version}.`, { exact: false })).toBeVisible();
+  await expect(page.getByText('One tape. Many ways to make.')).toHaveCount(0);
   await expect(page.locator('main')).toHaveCount(1);
   await expectNoSeriousAxeIssues(page);
 });
@@ -195,7 +200,7 @@ test('@claim:offline-reload the demo reloads after the network is disabled', asy
   await page.reload();
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   const cachedBytes = await page.evaluate(async () => {
-    const cache = await caches.open('linux-kid-lab-v7');
+    const cache = await caches.open('linux-kid-lab-v8');
     const keys = await cache.keys();
     const assets = keys.filter(key => /\/assets\/.*\.(js|css)$/.test(new URL(key.url).pathname));
     return Promise.all(assets.map(async asset => (await (await cache.match(asset))?.text())?.length ?? 0));
@@ -208,15 +213,28 @@ test('@claim:offline-reload the demo reloads after the network is disabled', asy
   await expect(page.locator('.activity-card').first()).toBeVisible();
 });
 
-test('keyboard dialog restores focus and the 390px layout does not overflow', async ({ page }) => {
+test('activity dialog contains immediate reverse-Tab, handles global Escape, and restores its opener', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/demo');
   const opener = page.locator('[data-open="maze-message"]');
   await opener.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('dialog')).toBeFocused();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByRole('button', { name: 'Stamp it made' })).toBeFocused();
+  expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(true);
   await page.keyboard.press('Escape');
   await expect(opener).toBeFocused();
+
+  await page.keyboard.press('Enter');
+  await expect(dialog).toBeFocused();
+  await page.locator('footer a[href*="github.com"]').focus();
+  expect(await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]')))).toBe(false);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+
   const widths = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
   expect(widths.scroll).toBeLessThanOrEqual(widths.client);
   await expectNoSeriousAxeIssues(page);
@@ -231,6 +249,7 @@ test('@claim:paid-pack license verification activates the paid print pack', asyn
   await page.goto('/demo');
   await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
   await expect(page).toHaveURL(/\/?demo=1/);
+  await expect(page.getByText('A one-time $12 pack license adds cut-out activity cards and a four-week weekend mix.')).toBeVisible();
   await page.getByText('Have a license?').click();
   await page.getByLabel('Paste your license').fill('test-license');
   await page.getByRole('button', { name: 'Verify license' }).click();
@@ -315,6 +334,9 @@ test('static deployment config gives unknown paths a real 404 and hashes get imm
   expect(config.responseOverrides['404']).toEqual({ rewrite: '/404.html', statusCode: 404 });
   expect(config.routes.slice(0, 7).map((route: { route: string }) => route.route)).toEqual(['/', '/demo', '/settings', '/privacy', '/terms', '/print', '/404']);
   expect(config.routes.find((route: { route: string }) => route.route === '/assets/*').headers['Cache-Control']).toBe('public, max-age=31536000, immutable');
+  expect(config.mimeTypes['.avif']).toBe('image/avif');
+  const manifest = JSON.parse(readFileSync('public/manifest.webmanifest', 'utf8'));
+  expect(manifest.start_url).toBe(`/?v=${packageMetadata.version}`);
 });
 
 test('a real static 404 keeps its cassette styling under style-src self without a CSP console error', async ({ page }) => {
@@ -340,23 +362,53 @@ test('a real static 404 keeps its cassette styling under style-src self without 
   expect(pageErrors.filter(error => !error.includes('server responded with a status of 404'))).toEqual([]);
 });
 
-test('dark system theme has no serious axe issues on every product route', async ({ page }) => {
-  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
-  for (const path of ['/', '/demo', '/settings?demo=1', '/privacy?demo=1', '/terms?demo=1', '/print?demo=1', '/missing-tape']) {
-    await page.goto(path);
-    await expectNoSeriousAxeIssues(page);
+test('desktop and mobile route matrix passes structure, reflow, reduced-motion, and axe checks in both themes', async ({ page }) => {
+  const routes = ['/', '/demo', '/settings?demo=1', '/privacy?demo=1', '/terms?demo=1', '/print?demo=1', '/missing-tape'];
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
+      for (const path of routes) {
+        await page.goto(path);
+        await expect(page.locator('h1')).toHaveCount(1);
+        await expect(page.locator('main')).toHaveCount(1);
+        const layout = await page.evaluate(() => ({
+          clientWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          animationDurations: [...document.querySelectorAll<HTMLElement>('body *')].map(element => getComputedStyle(element).animationDuration),
+          transitionDurations: [...document.querySelectorAll<HTMLElement>('body *')].map(element => getComputedStyle(element).transitionDuration)
+        }));
+        expect(layout.scrollWidth, `${path} overflowed at ${viewport.width}px in ${colorScheme}`).toBeLessThanOrEqual(layout.clientWidth);
+        expect(layout.animationDurations.every(duration => duration === '0s'), `${path} animated with reduced motion`).toBe(true);
+        expect(layout.transitionDurations.every(duration => duration === '0s'), `${path} transitioned with reduced motion`).toBe(true);
+        await expectNoSeriousAxeIssues(page);
+      }
+    }
   }
 });
 
-test('mobile header, footer, tool links, and age checkboxes have 44px targets', async ({ page }) => {
+test('every mobile interactive target is at least 44 by 44 CSS pixels', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/settings?demo=1');
-  const sizes = await page.locator('.site-header a, footer a, .tool-list a, .band-list input').evaluateAll(nodes => nodes.filter(node => getComputedStyle(node).display !== 'none').map(node => {
+  for (const path of ['/', '/demo', '/settings?demo=1', '/privacy?demo=1', '/terms?demo=1', '/print?demo=1']) {
+    await page.goto(path);
+    const sizes = await page.locator('a:visible, button:visible, input:visible, summary:visible, select:visible, textarea:visible, [tabindex]:not([tabindex="-1"]):visible').evaluateAll(nodes => [...new Set(nodes)].map(node => {
+      const rect = node.getBoundingClientRect();
+      return {
+        target: (node.textContent || node.getAttribute('aria-label') || node.getAttribute('name') || node.tagName).trim().replace(/\s+/g, ' ').slice(0, 80),
+        width: Number(rect.width.toFixed(1)),
+        height: Number(rect.height.toFixed(1))
+      };
+    }));
+    expect(sizes.length, `${path} should expose interactive targets`).toBeGreaterThan(0);
+    expect(sizes.filter(size => size.width < 44 || size.height < 44), `${path}: ${JSON.stringify(sizes)}`).toEqual([]);
+  }
+  await page.goto('/demo');
+  await page.locator('[data-open="maze-message"]').click();
+  const dialogSizes = await page.locator('[role="dialog"] a:visible, [role="dialog"] button:visible, [role="dialog"] input:visible, [role="dialog"] summary:visible, [role="dialog"] [tabindex]:not([tabindex="-1"]):visible').evaluateAll(nodes => [...new Set(nodes)].map(node => {
     const rect = node.getBoundingClientRect();
-    return { width: rect.width, height: rect.height };
+    return { target: (node.textContent || node.getAttribute('aria-label') || node.tagName).trim().replace(/\s+/g, ' ').slice(0, 80), width: Number(rect.width.toFixed(1)), height: Number(rect.height.toFixed(1)) };
   }));
-  expect(sizes.length).toBeGreaterThan(0);
-  expect(sizes.filter(size => size.width < 44 || size.height < 44), JSON.stringify(sizes)).toEqual([]);
+  expect(dialogSizes.filter(size => size.width < 44 || size.height < 44), `dialog: ${JSON.stringify(dialogSizes)}`).toEqual([]);
 });
 
 test('privacy, terms, and unknown routes have distinct titles and one h1', async ({ page }) => {
