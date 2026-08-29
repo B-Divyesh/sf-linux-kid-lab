@@ -5,7 +5,7 @@
 - Repaired candidate: `881d843114ca56aabd5607f99f6ac7b1acdeb4f6`
 - Repair commit: `45f2077510b641935be7f9b109dcd4cdc07a1bff` (followed by this handoff commit)
 - Live URL: <https://linux-kid-lab.sociobot.in>
-- Deployed: 29 August 2026, Azure Static Web Apps deployment `8ac27f66-656c-4129-bfd4-c7bf1b27c3e7`
+- Deployed: 29 August 2026, Azure Static Web Apps deployment `64ea3e9a-c13e-4fa8-8a90-ea31aa2797c1`
 
 ## Repaired findings
 
