@@ -2,7 +2,7 @@
   "name": "Linux Kid Lab",
   "short_name": "Kid Lab",
   "description": "Pick short creative activities and save progress on this device.",
-  "start_url": "/?v=1.0.4",
+  "start_url": "/?v=1.0.5",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f3e8cb",

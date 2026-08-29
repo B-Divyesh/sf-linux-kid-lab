@@ -30,6 +30,22 @@ test('@claim:twenty-activities the free shelf contains 20 activities', async ({ 
   await expect(page.getByText('20 activities', { exact: true })).toBeVisible();
 });
 
+test('@claim:free-activities all 20 activities are available without payment', async ({ page }) => {
+  const requestedOrigins = new Set<string>();
+  page.on('request', request => requestedOrigins.add(new URL(request.url()).origin));
+  await page.goto('/?demo=1');
+  await page.getByRole('button', { name: 'Ages 5–7' }).click();
+  await expect(page.locator('.activity-card')).toHaveCount(20);
+  for (const opener of await page.locator('[data-open]').all()) {
+    await opener.click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('button', { name: 'Close activity' }).click();
+  }
+  await expect(page.getByRole('link', { name: /buy|checkout|purchase|license/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /buy|checkout|purchase|license/i })).toHaveCount(0);
+  expect([...requestedOrigins]).toEqual(['http://127.0.0.1:4173']);
+});
+
 test('@claim:three-steps every one of the 20 activity cards opens three steps', async ({ page }) => {
   await page.goto('/demo');
   await page.getByRole('button', { name: 'Ages 5–7' }).click();
@@ -94,6 +110,34 @@ test('@claim:demo-indexeddb demo data uses its own IndexedDB database', async ({
   expect(afterLeaving).not.toContain('demo:linux-kid-lab');
 });
 
+test('@claim:real-indexeddb-storage real activity data is saved only in the real IndexedDB database', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Ages 11–13' }).click();
+  await page.locator('[data-open="maze-message"]').click();
+  await page.getByRole('button', { name: 'Give me another twist' }).click();
+  await page.getByRole('button', { name: 'Stamp it made' }).click();
+  const result = await page.evaluate(async () => {
+    const names = (await indexedDB.databases()).map(database => database.name);
+    const request = indexedDB.open('linux-kid-lab');
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    const state = await new Promise<{ bands: string[], completed: Record<string, string>, twists: Record<string, number> }>((resolve, reject) => {
+      const read = db.transaction('lab').objectStore('lab').get('state');
+      read.onsuccess = () => resolve(read.result);
+      read.onerror = () => reject(read.error);
+    });
+    db.close();
+    return { names, state };
+  });
+  expect(result.names).toContain('linux-kid-lab');
+  expect(result.names).not.toContain('demo:linux-kid-lab');
+  expect(result.state.bands).toEqual(['5–7', '8–10', '11–13']);
+  expect(result.state.twists['maze-message']).toBe(1);
+  expect(result.state.completed['maze-message']).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+});
+
 test('@claim:json-export exports progress as JSON', async ({ page }) => {
   await page.goto('/demo');
   await page.getByRole('link', { name: 'Parent setup' }).click();
@@ -140,7 +184,7 @@ test('@claim:clear-progress parents can clear saved progress', async ({ page }) 
   await expect(page.locator('.progress-strip strong')).toHaveText('0 of 20');
 });
 
-test('@claim:open-tool-suggestion every activity has a working official tool link', async ({ page, request }) => {
+test('@claim:creative-app-suggestion every activity has a working official creative app link', async ({ page, request }) => {
   const officialToolUrls = new Set([
     'https://tuxpaint.org/',
     'https://www.audacityteam.org/',
@@ -159,7 +203,7 @@ test('@claim:open-tool-suggestion every activity has a working official tool lin
   for (const id of activityIds) {
     await page.locator(`[data-open="${id}"]`).click();
     const links = page.locator('.tool-row a');
-    expect(await links.count(), `${id} needs an open-tool suggestion`).toBeGreaterThan(0);
+    expect(await links.count(), `${id} needs a creative app suggestion`).toBeGreaterThan(0);
     for (let index = 0; index < await links.count(); index += 1) {
       const href = await links.nth(index).getAttribute('href');
       expect(href, `${id} must use an approved official destination`).not.toBeNull();
@@ -171,8 +215,8 @@ test('@claim:open-tool-suggestion every activity has a working official tool lin
   expect(usedUrls).toEqual(officialToolUrls);
   for (const url of officialToolUrls) {
     const response = await request.get(url, { failOnStatusCode: false, maxRedirects: 5, timeout: 20_000 });
-    expect(response.status(), `${url} must be reachable from the shipped open-tool link`).toBeGreaterThanOrEqual(200);
-    expect(response.status(), `${url} must be reachable from the shipped open-tool link`).toBeLessThan(400);
+    expect(response.status(), `${url} must be reachable from the shipped creative app link`).toBeGreaterThanOrEqual(200);
+    expect(response.status(), `${url} must be reachable from the shipped creative app link`).toBeLessThan(400);
   }
 });
 
@@ -200,7 +244,7 @@ test('@claim:offline-reload the demo reloads after the network is disabled', asy
   await page.reload();
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   const cachedBytes = await page.evaluate(async () => {
-    const cache = await caches.open('linux-kid-lab-v10');
+    const cache = await caches.open('linux-kid-lab-v11');
     const keys = await cache.keys();
     const assets = keys.filter(key => /\/assets\/.*\.(js|css)$/.test(new URL(key.url).pathname));
     return Promise.all(assets.map(async asset => (await (await cache.match(asset))?.text())?.length ?? 0));
@@ -274,6 +318,32 @@ test('the direct ?demo=1 entry opens the populated sample shelf', async ({ page 
   await expect(page.getByLabel('Demo mode')).toBeVisible();
   await expect(page.locator('.activity-card')).toHaveCount(13);
   await expect(page.getByRole('button', { name: 'Reset demo' })).toBeVisible();
+  await page.locator('[data-open="maze-message"]').click();
+  await page.getByRole('button', { name: 'Stamp it made' }).click();
+  await expect(page.locator('.progress-strip strong')).toHaveText('4 of 20');
+  await page.getByRole('button', { name: 'Reset demo' }).click();
+  await expect(page.locator('.progress-strip strong')).toHaveText('3 of 20');
+});
+
+test('the first-screen sample action uses the isolated query demo entry', async ({ page }) => {
+  await page.goto('/');
+  const action = page.getByRole('link', { name: 'Try it with sample data' });
+  await expect(action).toHaveAttribute('href', '/?demo=1');
+  await action.click();
+  await expect(page).toHaveURL('/?demo=1');
+  await expect(page.getByLabel('Demo mode')).toContainText('Demo — sample data, nothing is saved');
+});
+
+test('demo navigation stays isolated until Start for real discards it', async ({ page }) => {
+  await page.goto('/?demo=1');
+  await page.getByRole('link', { name: 'Activities' }).click();
+  await expect(page).toHaveURL('/?demo=1#activities');
+  await expect(page.getByLabel('Demo mode')).toBeVisible();
+  await expect(page.locator('.progress-strip strong')).toHaveText('3 of 20');
+  await page.getByRole('button', { name: 'Start for real' }).click();
+  await expect(page).toHaveURL('/');
+  const databases = await page.evaluate(async () => (await indexedDB.databases()).map(database => database.name));
+  expect(databases).not.toContain('demo:linux-kid-lab');
 });
 
 test('static deployment config gives unknown paths a real 404 and hashes get immutable caching', () => {
@@ -398,5 +468,80 @@ test('privacy, terms, and unknown routes have distinct titles and one h1', async
     await page.goto(path);
     await expect(page).toHaveTitle(title);
     await expect(page.locator('h1')).toHaveCount(1);
+  }
+});
+
+test('every app route updates title, description, canonical, and social metadata', async ({ page }) => {
+  const routes = [
+    ['/', 'Linux Kid Lab — Pick local creative activities', 'https://linux-kid-lab.sociobot.in/'],
+    ['/demo', 'Demo — Linux Kid Lab', 'https://linux-kid-lab.sociobot.in/demo'],
+    ['/settings', 'Parent setup — Linux Kid Lab', 'https://linux-kid-lab.sociobot.in/settings'],
+    ['/privacy', 'Privacy — Linux Kid Lab', 'https://linux-kid-lab.sociobot.in/privacy'],
+    ['/terms', 'Terms — Linux Kid Lab', 'https://linux-kid-lab.sociobot.in/terms'],
+    ['/print', 'Print tokens — Linux Kid Lab', 'https://linux-kid-lab.sociobot.in/print'],
+    ['/?demo=1', 'Demo — Linux Kid Lab', 'https://linux-kid-lab.sociobot.in/demo']
+  ] as const;
+  for (const [path, title, canonical] of routes) {
+    await page.goto(path);
+    await expect(page).toHaveTitle(title);
+    const description = await page.locator('meta[name="description"]').getAttribute('content');
+    expect(description?.length).toBeGreaterThanOrEqual(40);
+    expect(description?.length).toBeLessThanOrEqual(155);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', canonical);
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', title);
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', canonical);
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute('content', title);
+    await expect(page.locator('footer a[href="/privacy"]')).toHaveCount(1);
+    await expect(page.locator('footer a[href="/terms"]')).toHaveCount(1);
+  }
+});
+
+test('public app routes load without console or page errors', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(String(error)));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  for (const path of ['/', '/?demo=1', '/demo', '/settings', '/privacy', '/terms', '/print']) {
+    await page.goto(path);
+    await expect(page.locator('#app[data-ready="true"]')).toHaveCount(1);
+  }
+  expect(errors).toEqual([]);
+});
+
+test('history navigation restores the route top, h1 focus, and announcement', async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => scrollTo(0, document.body.scrollHeight));
+  await page.locator('header').getByRole('link', { name: 'Parent setup' }).click();
+  await expect(page).toHaveURL('/settings');
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('Choose what appears on the shelf');
+  expect(await page.evaluate(() => scrollY)).toBeLessThan(100);
+  await page.goBack();
+  await expect(page).toHaveURL('/');
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  await expect(page.locator('#route-status')).toHaveText('Pick one creative activity after school');
+  expect(await page.evaluate(() => scrollY)).toBeLessThan(100);
+});
+
+test('claims registry and tagged tests remain one-to-one', () => {
+  const claims = JSON.parse(readFileSync('.factory/claims.json', 'utf8')) as Array<{ id: string, test: string }>;
+  const source = readFileSync('tests/app.spec.ts', 'utf8');
+  const registered = new Set(claims.map(claim => claim.id));
+  expect(registered.size).toBe(claims.length);
+  for (const claim of claims) {
+    expect(claim.test).toBe(`npm test -- --grep @claim:${claim.id}`);
+    expect(source.split(`@claim:${claim.id}`).length - 1, claim.id).toBe(1);
+  }
+  const tagged = [...source.matchAll(/@claim:([a-z0-9-]+)/g)].map(match => match[1]);
+  expect(new Set(tagged)).toEqual(registered);
+});
+
+test('copy audit word counts follow its documented rule', () => {
+  const audit = readFileSync('.factory/copy-audit.md', 'utf8');
+  const rows = [...audit.matchAll(/^\|\s*(\d+)\s*\|\s*(.*?)\s*\|$/gm)];
+  expect(rows.length).toBeGreaterThan(50);
+  for (const [, expected, copy] of rows) {
+    const plain = copy.replace(/`[^`]+`/g, 'CODE').replace(/\*\*/g, '').trim();
+    const actual = plain ? plain.split(/\s+/).filter(token => token !== '—' && token !== '-').length : 0;
+    expect(actual, copy).toBe(Number(expected));
   }
 });

@@ -40,13 +40,36 @@ const titles: Record<string, string> = {
   '/404':'Page not found — Linux Kid Lab'
 };
 
+const descriptions: Record<string, string> = {
+  '/':'Pick 20 short creative activities for children, save progress in this browser, and keep making offline.',
+  '/demo':'Try a sample Linux Kid Lab shelf with 20 creative activities and isolated demo progress.',
+  '/settings':'Choose age bands, export or import progress, and find creative apps for Linux Kid Lab activities.',
+  '/privacy':'Read what Linux Kid Lab stores in this browser and how to export or delete activity progress.',
+  '/terms':'Read the terms for using Linux Kid Lab activities at home, in class, or in a community group.',
+  '/print':'Print a token for each completed Linux Kid Lab activity.',
+  '/404':'The requested Linux Kid Lab page was not found. Return to the activity shelf.'
+};
+
+function updateMetadata(path: string) {
+  const canonicalPath = path === '/404' ? '/404' : path;
+  const canonical = `https://linux-kid-lab.sociobot.in${canonicalPath}`;
+  document.title = titles[path];
+  document.querySelector('meta[name="description"]')?.setAttribute('content', descriptions[path]);
+  document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonical);
+  document.querySelector('meta[property="og:title"]')?.setAttribute('content', titles[path]);
+  document.querySelector('meta[property="og:description"]')?.setAttribute('content', descriptions[path]);
+  document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonical);
+  document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', titles[path]);
+  document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', descriptions[path]);
+}
+
 function header() {
   return `<a class="skip-link" href="#main">Skip to main content</a>
     ${demo ? `<aside class="demo-bar" aria-label="Demo mode"><strong>Demo — sample data, nothing is saved</strong><span><button class="text-button" data-action="reset-demo">Reset demo</button><button class="text-button" data-action="start-real">Start for real</button></span></aside>` : ''}
     <header class="site-header">
       <a class="wordmark" href="/" data-nav aria-label="Linux Kid Lab home"><span aria-hidden="true">▶</span> Linux Kid Lab</a>
       <nav aria-label="Main navigation">
-        <a href="/#activities">Activities</a>
+        <a href="/#activities" data-nav>Activities</a>
         <a href="/demo" data-nav>Demo</a>
         <a href="/settings" data-nav>Parent setup</a>
         <a href="/privacy" data-nav>Privacy</a>
@@ -100,7 +123,7 @@ function activityShelf(showIntro = true) {
   const visible = activities.filter(a => state.bands.includes(a.band));
   const cards = visible.length ? visible.map(activityCard).join('') : `<div class="empty-state"><span aria-hidden="true">□ □ □</span><h3>Your shelf is empty</h3><p>Choose at least one age band to see activities.</p><a class="button secondary" href="/settings" data-nav>Choose age bands</a></div>`;
   return `<section id="activities" class="activity-section" aria-labelledby="activity-heading">
-    ${showIntro ? `<div class="section-heading"><span class="eyebrow">The activity shelf</span><h2 id="activity-heading">Choose an activity</h2><p>Each card has three steps and one open tool suggestion.</p></div>` : `<h2 id="activity-heading" class="sr-only">Sample activity shelf</h2>`}
+    ${showIntro ? `<div class="section-heading"><span class="eyebrow">The activity shelf</span><h2 id="activity-heading">Choose an activity</h2><p>Each card has three steps and one creative app suggestion.</p></div>` : `<h2 id="activity-heading" class="sr-only">Sample activity shelf</h2>`}
     <div class="filter-row" aria-label="Age band filters">${bands.map(b => `<button class="filter ${state.bands.includes(b) ? 'selected' : ''}" data-band="${b}" aria-pressed="${state.bands.includes(b)}">Ages ${b}</button>`).join('')}<span>${visible.length} activities</span></div>
     <div class="activity-grid">${cards}</div>
   </section>`;
@@ -113,7 +136,7 @@ function landing() {
         <span class="kicker">Creative activities for Linux families</span>
         <h1 tabindex="-1">Pick one creative activity after school</h1>
         <p class="lede">For parents whose child needs a next step after their first learning app.</p>
-        <div class="hero-action"><a class="button primary" href="/demo" data-nav>Try it with sample data</a><span>Loads a sample family’s activity shelf.</span></div>
+        <div class="hero-action"><a class="button primary" href="/?demo=1" data-nav>Try it with sample data</a><span>Loads a sample family’s activity shelf.</span></div>
         ${facts()}
       </div>
       <figure class="hero-art"><picture><source srcset="/hero-cassette-640.avif 640w, /hero-cassette.avif 1024w" sizes="(max-width: 800px) calc(100vw - 64px), 520px" type="image/avif"><source srcset="/hero-cassette-640.webp 640w, /hero-cassette.webp 1024w" sizes="(max-width: 800px) calc(100vw - 64px), 520px" type="image/webp"><img src="/hero-cassette.jpg" width="1024" height="1024" alt="A cassette sends tape paths toward paper shapes, pixel art, and sound pads." fetchpriority="high" decoding="async"></picture><figcaption>The paths show drawing, coding, and sound activities.</figcaption></figure>
@@ -123,7 +146,7 @@ function landing() {
     <section class="steps-section" aria-labelledby="how-heading"><div class="section-heading"><span class="eyebrow">How it works</span><h2 id="how-heading">How it works</h2></div>
       <ol class="steps"><li><strong>Choose ages</strong><span>A parent picks one or more age bands.</span></li><li><strong>Pick a card</strong><span>A child follows three short steps.</span></li><li><strong>Stamp it made</strong><span>The device saves progress for next time.</span></li></ol>
     </section>
-    <section class="privacy-block" aria-labelledby="boundaries-heading"><div><span class="eyebrow">Privacy and limits</span><h2 id="boundaries-heading">What this activity shelf does not do</h2></div><div><p>There are no accounts, ads, chat, scores, or behavior tracking.</p><p>Tool links may need an installed app or internet access. Every activity also works with paper.</p><a href="/privacy" data-nav>Read the privacy note</a></div></section>
+    <section class="privacy-block" aria-labelledby="boundaries-heading"><div><span class="eyebrow">Privacy and limits</span><h2 id="boundaries-heading">What this activity shelf does not do</h2></div><div><p>There are no accounts, ads, chat, scores, or behavior tracking.</p><p>Creative app links may need an installed app or internet access.</p><p>Every activity also works with paper.</p><a href="/privacy" data-nav>Read the privacy note</a></div></section>
   </main>`);
 }
 
@@ -139,7 +162,7 @@ function activityDialog(activity: Activity) {
     <ol class="activity-steps">${activity.steps.map((s,i) => `<li><span>${i+1}</span>${escapeHtml(s)}</li>`).join('')}</ol>
     <aside class="paper-alternative"><strong>Paper alternative</strong><p>${escapeHtml(paperAlternative(activity.kind))}</p></aside>
     <div class="twist"><span class="eyebrow">Try this twist</span><p>${escapeHtml(activity.twists[twistIndex % activity.twists.length])}</p><button class="text-button" data-action="new-twist">Give me another twist</button></div>
-    <div class="tool-row"><span>Suggested open tool:</span>${activity.tools.map(tool => `<a href="${toolLinks[tool]}" rel="external">Open ${tool} <span class="sr-only">(external)</span></a>`).join('')}<small>Paper works too. External tool links may need internet.</small></div>
+    <div class="tool-row"><span>Suggested creative app:</span>${activity.tools.map(tool => `<a href="${toolLinks[tool]}" rel="external">Open ${tool} <span class="sr-only">(external)</span></a>`).join('')}<small>Paper works too. Creative app links may need internet.</small></div>
     <button class="button primary complete-button" data-action="complete">${done ? 'Made it again' : 'Stamp it made'}</button>
   </section></div>`;
 }
@@ -148,23 +171,23 @@ function settingsPage() {
   return shell(`<main id="main" class="narrow-page"><span class="kicker">Parent setup</span><h1 tabindex="-1">Choose what appears on the shelf</h1><p>These choices stay in this browser. Children can still change filters on the shelf.</p>
     <section aria-labelledby="age-heading"><h2 id="age-heading">Age bands</h2><form id="settings-form" class="band-list">${bands.map(b => `<label><input type="checkbox" name="band" value="${b}" ${state.bands.includes(b) ? 'checked' : ''}><span><strong>Ages ${b}</strong><small>${activities.filter(a=>a.band===b).length} activities</small></span></label>`).join('')}<button class="button primary" type="submit">Save age bands</button></form></section>
     <section aria-labelledby="data-heading"><h2 id="data-heading">Move or clear your data</h2><div class="data-actions"><button class="button secondary" data-action="export">Export progress as JSON</button><label class="button secondary file-button">Import progress<input id="import-file" type="file" accept="application/json"></label><button class="danger-button" data-action="${demo ? 'clear-demo-progress' : 'reset-real'}">${demo ? 'Clear sample progress' : 'Clear saved progress'}</button></div><p class="error" role="alert">${escapeHtml(importError)}</p></section>
-    <section aria-labelledby="tools-heading"><h2 id="tools-heading">Open tools</h2><p>Activity cards link to official open-tool websites. Install the tools you want through your Linux software app.</p><ul class="tool-list">${Object.entries(toolLinks).map(([name,url]) => `<li><a href="${url}" rel="external">${name} <span class="sr-only">(external)</span></a></li>`).join('')}</ul></section>
+    <section aria-labelledby="tools-heading"><h2 id="tools-heading">Creative apps</h2><p>Activity cards link to official creative app websites. Install the apps you want through your Linux software app.</p><ul class="tool-list">${Object.entries(toolLinks).map(([name,url]) => `<li><a href="${url}" rel="external">${name} <span class="sr-only">(external)</span></a></li>`).join('')}</ul></section>
   </main>`);
 }
 
 function printPage() {
   const complete = activities.filter(a => state.completed[a.id]);
   return shell(`<main id="main" class="print-page"><div class="print-toolbar"><div><span class="kicker">Print at 100% scale</span><h1 tabindex="-1">Cut out your progress tokens</h1></div><button class="button primary" data-action="print">Print this sheet</button></div>
-    ${complete.length ? `<section aria-labelledby="token-heading"><h2 id="token-heading">Made by me</h2><div class="token-grid">${complete.map(a => `<article class="token"><span aria-hidden="true">★</span><strong>${escapeHtml(a.title)}</strong><small>${escapeHtml(state.completed[a.id])}</small></article>`).join('')}</div></section>` : `<section class="empty-state"><h2>No tokens yet</h2><p>Finish one activity to add its token here.</p><a class="button secondary" href="/#activities">Pick an activity</a></section>`}
+    ${complete.length ? `<section aria-labelledby="token-heading"><h2 id="token-heading">Made by me</h2><div class="token-grid">${complete.map(a => `<article class="token"><span aria-hidden="true">★</span><strong>${escapeHtml(a.title)}</strong><small>${escapeHtml(state.completed[a.id])}</small></article>`).join('')}</div></section>` : `<section class="empty-state"><h2>No tokens yet</h2><p>Finish one activity to add its token here.</p><a class="button secondary" href="/#activities" data-nav>Pick an activity</a></section>`}
   </main>`);
 }
 
 function privacyPage() {
-  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Your activity data stays in this browser</h1><p>Linux Kid Lab stores age choices, completed activities, and twists in IndexedDB on this device.</p><h2>What leaves this device</h2><p>Nothing leaves during normal activity use.</p><p>There are no accounts, ads, chat, scores, or behavior tracking.</p><p>Official tool links open another website. That website has its own privacy policy.</p><h2>Delete or move your data</h2><p>Parent setup can export a JSON copy or clear saved progress. Browser storage controls can also remove everything.</p><h2>Demo data</h2><p>Demo mode uses a separate IndexedDB database named <code>demo:linux-kid-lab</code>. Leaving or resetting the demo discards it.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></main>`);
+  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Your activity data stays in this browser</h1><p>Linux Kid Lab stores age choices, completed activities, and twists in IndexedDB on this device.</p><h2>What leaves this device</h2><p>Nothing leaves during normal activity use.</p><p>There are no accounts, ads, chat, scores, or behavior tracking.</p><p>Creative app links open another website. That website has its own privacy policy.</p><h2>Delete or move your data</h2><p>Parent setup can export a JSON copy or clear saved progress. Browser storage controls can also remove everything.</p><h2>Demo data</h2><p>Demo mode uses a separate IndexedDB database named <code>demo:linux-kid-lab</code>. Leaving or resetting the demo discards it.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></main>`);
 }
 
 function termsPage() {
-  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Terms for using Linux Kid Lab</h1><p>You may use the activities at home, in a classroom, or in a community group.</p><h2>Parent supervision</h2><p>An adult decides which external tools and websites a child may open. Follow each tool’s own terms.</p><h2>No warranty</h2><p>The site is provided as available. Keep an exported copy if saved progress matters to you.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p></main>`);
+  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Terms for using Linux Kid Lab</h1><p>You may use the activities at home, in a classroom, or in a community group.</p><h2>Parent supervision</h2><p>An adult decides which creative apps and websites a child may open. Follow each app’s own terms.</p><h2>No warranty</h2><p>The site is provided as available. Keep an exported copy if saved progress matters to you.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p></main>`);
 }
 
 function notFoundPage() {
@@ -173,8 +196,7 @@ function notFoundPage() {
 
 function render(focus = false) {
   const path = routePath();
-  document.title = titles[path];
-  document.querySelector('link[rel="canonical"]')?.setAttribute('href', `https://linux-kid-lab.sociobot.in${path === '/404' ? location.pathname : path}`);
+  updateMetadata(path);
   const pages: Record<string, () => string> = {'/':landing,'/demo':demoPage,'/settings':settingsPage,'/privacy':privacyPage,'/terms':termsPage,'/print':printPage,'/404':notFoundPage};
   app.dataset.ready = 'false';
   app.innerHTML = pages[path]();
@@ -203,12 +225,12 @@ function closeActivity(restoreFocus = true) {
 
 function go(url: string) {
   history.pushState({}, '', url);
+  scrollTo({top:0, behavior:'auto'});
   const nextDemo = location.pathname === '/demo' || new URLSearchParams(location.search).get('demo') === '1';
   if (nextDemo !== demo) {
     demo = nextDemo;
     loadState(demo).then(newState => { state = newState; activeActivity = null; render(true); });
   } else { activeActivity = null; render(true); }
-  scrollTo({top:0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
 }
 
 function announce(message: string) {
@@ -302,7 +324,8 @@ async function start() {
   }).catch(()=>{});
 }
 
-addEventListener('popstate', async () => { const nextDemo=location.pathname==='/demo' || new URLSearchParams(location.search).get('demo')==='1'; if(nextDemo!==demo){demo=nextDemo;state=await loadState(demo);} activeActivity=null;render(true); });
+history.scrollRestoration = 'manual';
+addEventListener('popstate', async () => { const nextDemo=location.pathname==='/demo' || new URLSearchParams(location.search).get('demo')==='1'; if(nextDemo!==demo){demo=nextDemo;state=await loadState(demo);} activeActivity=null;scrollTo({top:0,behavior:'auto'});render(true); });
 addEventListener('online',updateOnlineState); addEventListener('offline',updateOnlineState);
 addEventListener('keydown', trapDialogFocus);
 start();

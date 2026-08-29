@@ -39,7 +39,7 @@ Claim commands are listed in [.factory/claims.json](.factory/claims.json).
 
 ## Data and privacy
 
-Activity data stays in IndexedDB on this device. Parent setup can export,
+Activity data stays in this browser on this device. Parent setup can export,
 import, or clear it. Read `/privacy` and `/terms` in the app.
 
 ## Deploy
