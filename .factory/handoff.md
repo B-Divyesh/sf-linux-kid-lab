@@ -1,43 +1,35 @@
-# Linux Kid Lab — verification 7 handoff
+# Linux Kid Lab — review 2 handoff
 
 ## Result
 
-**PASS** for candidate `1158ffffb4003a5165a2febf60c792f3d3ae7e57` at
-<https://linux-kid-lab.sociobot.in> on 29 August 2026.
+**FAIL.** This was a review-only work order. No product code or assets were
+modified.
 
-Independent evidence is in `.factory/verification-7.md`. Production matches
-the candidate byte-for-byte for the sampled release files. No product code was
-changed during verification.
+The review is in `.factory/review-2.md`. It records five blocking findings:
 
-## Verification summary
+1. `.factory/copy-audit.md` has incorrect and combined sentence word counts.
+2. `.factory/demo.md` still describes deleted license behavior.
+3. “20 activities are free” has no registered claim/test.
+4. The README's real IndexedDB-storage statement has no registered claim/test.
+5. “Open tool” remains jargon and conflicts with “creative app.”
 
-- `npm ci`: passed, 0 vulnerabilities.
-- All 15 exact `.factory/claims.json` commands: passed.
-- `npm test`: passed, 51/51 in 1.4 minutes.
-- `npm run build`: passed; TypeScript and Vite produced `dist/`.
-- Mandatory cold first-read and one-click sample demo: passed.
-- Live normal, boundary, invalid-import, persistence, reset, and demo-isolation
-  flows: passed with only same-origin requests.
-- Desktop and 390 px mobile, keyboard, focus, dark mode, reduced motion,
-  44 px targets, and axe serious/critical checks: passed.
-- Live service-worker control, offline reload, and update notification: passed.
-- Security headers, cache policy, real 404, manifest/icons, and link crawl:
-  passed.
-- Lighthouse mobile: 100 Performance, 100 Accessibility, 100 Best Practices,
-  100 SEO; LCP 1.07 s, TBT 3 ms, CLS 0.
-- Bundles: 10.13 kB gzip JS, 4.61 kB gzip CSS, 29.75 kB mobile hero.
+## Verification performed
 
-## Findings
-
-- **Medium, nonblocking:** the researched one-time curated pack is not shipped.
-  The complete 20-activity core is free and makes no unavailable purchase
-  promise.
-- **Low:** `.factory/demo.md` retains two stale license references even though
-  candidate 1.0.4 has no license flow.
-
-There is no backend, sign-in, runtime AI, product-unlock endpoint, library, or
-CLI. Rate-limit, Entra, AI gateway, backend concurrency, and package-consumer
-checks do not apply.
+- Clean `npm ci` completed with 0 reported vulnerabilities.
+- All 15 literal commands in `.factory/claims.json` completed successfully.
+- `npm test` passed: 51 tests; `test-results/.last-run.json` reports `passed`
+  with no failed tests.
+- `npm run build` passed and produced `dist/`.
+- Fresh live desktop and 390 px mobile first reads passed; the sample CTA was
+  visible before scrolling.
+- Live `/demo` showed sample data, demo banner, Reset demo, Start for real,
+  and separate storage. Registered tests confirmed reset/exit isolation and
+  offline reload.
+- Production request logging during a demo flow observed only the product
+  origin. Live axe scans found no serious or critical violations on seven
+  public routes.
+- Internal/external link crawl passed; direct unknown route correctly returned
+  the intentional 404.
 
 ## Reproduce
 
@@ -47,12 +39,10 @@ npm test
 npm run build
 ```
 
-Run each `test` value in `.factory/claims.json` for the individual claim gate.
-Open `/demo` for the isolated sample and inspect `.factory/evidence/` for live
-screenshots, the verifier output, claim JSON, and Lighthouse report.
+Run each `test` command in `.factory/claims.json` individually. Open
+`https://linux-kid-lab.sociobot.in/demo` for the isolated demo.
 
 ## Next steps
 
-1. Remove the two obsolete license sentences from `.factory/demo.md`.
-2. Treat a paid offline pack as separate scope; register it with Sociobot
-   billing before adding any purchase copy or runtime license code.
+Resolve every finding in `.factory/review-2.md`, regenerate the copy audit,
+add the missing claim coverage, and commission another full first-read review.
