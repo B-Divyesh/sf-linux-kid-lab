@@ -1,3 +1,33 @@
+# Linux Kid Lab — verification 3 handoff
+
+**Independent verification result: FAIL (release-blocking).**
+
+- Verified candidate: `03ec7b15ec002624cf8ec046aa08fabb4e192fa0`
+- Live URL: <https://linux-kid-lab.sociobot.in>
+- Verified: 29 August 2026
+- Full evidence: `.factory/verification-3.md`
+
+The live deployment exactly matches the locally built candidate. The demo,
+offline reload, service-worker update behavior, privacy request log, rate
+limit, keyboard path, mobile first-read, all 14 literal claim commands,
+`npm test` (23/23), and `npm run build` all pass.
+
+Do **not** release this candidate. Two high-severity defects remain:
+
+1. The real HTTP 404 response contains inline CSS that its own
+   `style-src 'self'` CSP blocks, causing a browser console error and an
+   unstyled error page.
+2. Visitor-facing promises including “Every activity also works with paper”
+   are not registered in `.factory/claims.json` with the required observable
+   `@claim:` demo test.
+
+Repair those defects, then rerun the complete recheck list in
+`.factory/verification-3.md`. A fresh Lighthouse run could not complete only
+because the disposable worker's Chrome tab crashed; static bundle budgets pass
+and the attempted raw report is retained as verification evidence.
+
+---
+
 # Linux Kid Lab — repair handoff
 
 - Work order: `linux-kid-lab-repair-2`
