@@ -200,7 +200,7 @@ test('@claim:offline-reload the demo reloads after the network is disabled', asy
   await page.reload();
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   const cachedBytes = await page.evaluate(async () => {
-    const cache = await caches.open('linux-kid-lab-v8');
+    const cache = await caches.open('linux-kid-lab-v9');
     const keys = await cache.keys();
     const assets = keys.filter(key => /\/assets\/.*\.(js|css)$/.test(new URL(key.url).pathname));
     return Promise.all(assets.map(async asset => (await (await cache.match(asset))?.text())?.length ?? 0));
@@ -362,26 +362,49 @@ test('a real static 404 keeps its cassette styling under style-src self without 
   expect(pageErrors.filter(error => !error.includes('server responded with a status of 404'))).toEqual([]);
 });
 
-test('desktop and mobile route matrix passes structure, reflow, reduced-motion, and axe checks in both themes', async ({ page }) => {
-  const routes = ['/', '/demo', '/settings?demo=1', '/privacy?demo=1', '/terms?demo=1', '/print?demo=1', '/missing-tape'];
-  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
-    await page.setViewportSize(viewport);
+const routeMatrixCases = [
+  { path: '/', label: 'home' },
+  { path: '/demo', label: 'demo' },
+  { path: '/settings?demo=1', label: 'parent setup' },
+  { path: '/privacy?demo=1', label: 'privacy' },
+  { path: '/terms?demo=1', label: 'terms' },
+  { path: '/print?demo=1', label: 'print' },
+  { path: '/missing-tape', label: 'not found' }
+];
+
+const routeMatrixViewports = [
+  { width: 1440, height: 900, label: 'desktop' },
+  { width: 390, height: 844, label: 'mobile' }
+];
+
+test.describe('@regression:route-matrix routes are independently ready before visual and accessibility checks', () => {
+  // Axe walks the rendered document. Twenty seconds covers a cold IndexedDB
+  // open, service-worker registration, and one complete axe scan, while still
+  // failing a genuinely stalled route quickly. The old test attempted 28 such
+  // scans under one 30-second timeout.
+  test.setTimeout(20_000);
+
+  for (const viewport of routeMatrixViewports) {
     for (const colorScheme of ['light', 'dark'] as const) {
-      await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
-      for (const path of routes) {
-        await page.goto(path);
-        await expect(page.locator('h1')).toHaveCount(1);
-        await expect(page.locator('main')).toHaveCount(1);
-        const layout = await page.evaluate(() => ({
-          clientWidth: document.documentElement.clientWidth,
-          scrollWidth: document.documentElement.scrollWidth,
-          animationDurations: [...document.querySelectorAll<HTMLElement>('body *')].map(element => getComputedStyle(element).animationDuration),
-          transitionDurations: [...document.querySelectorAll<HTMLElement>('body *')].map(element => getComputedStyle(element).transitionDuration)
-        }));
-        expect(layout.scrollWidth, `${path} overflowed at ${viewport.width}px in ${colorScheme}`).toBeLessThanOrEqual(layout.clientWidth);
-        expect(layout.animationDurations.every(duration => duration === '0s'), `${path} animated with reduced motion`).toBe(true);
-        expect(layout.transitionDurations.every(duration => duration === '0s'), `${path} transitioned with reduced motion`).toBe(true);
-        await expectNoSeriousAxeIssues(page);
+      for (const route of routeMatrixCases) {
+        test(`${viewport.label} ${colorScheme} ${route.label} preserves structure, reflow, reduced motion, and axe`, async ({ page }) => {
+          await page.setViewportSize(viewport);
+          await page.emulateMedia({ colorScheme, reducedMotion: 'reduce' });
+          await page.goto(route.path, { waitUntil: 'domcontentloaded' });
+          await expect(page.locator('#app[data-ready="true"]')).toHaveCount(1);
+          await expect(page.locator('h1')).toHaveCount(1);
+          await expect(page.locator('main')).toHaveCount(1);
+          const layout = await page.evaluate(() => ({
+            clientWidth: document.documentElement.clientWidth,
+            scrollWidth: document.documentElement.scrollWidth,
+            animationDurations: [...document.querySelectorAll<HTMLElement>('body *')].map(element => getComputedStyle(element).animationDuration),
+            transitionDurations: [...document.querySelectorAll<HTMLElement>('body *')].map(element => getComputedStyle(element).transitionDuration)
+          }));
+          expect(layout.scrollWidth, `${route.path} overflowed at ${viewport.width}px in ${colorScheme}`).toBeLessThanOrEqual(layout.clientWidth);
+          expect(layout.animationDurations.every(duration => duration === '0s'), `${route.path} animated with reduced motion`).toBe(true);
+          expect(layout.transitionDurations.every(duration => duration === '0s'), `${route.path} transitioned with reduced motion`).toBe(true);
+          await expectNoSeriousAxeIssues(page);
+        });
       }
     }
   }

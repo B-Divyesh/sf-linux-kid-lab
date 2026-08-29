@@ -196,6 +196,7 @@ function render(focus = false) {
   document.title = titles[path];
   document.querySelector('link[rel="canonical"]')?.setAttribute('href', `https://linux-kid-lab.sociobot.in${path === '/404' ? location.pathname : path}`);
   const pages: Record<string, () => string> = {'/':landing,'/demo':demoPage,'/settings':settingsPage,'/privacy':privacyPage,'/terms':termsPage,'/print':printPage,'/404':notFoundPage};
+  app.dataset.ready = 'false';
   app.innerHTML = pages[path]();
   bindEvents();
   updateOnlineState();
@@ -206,6 +207,10 @@ function render(focus = false) {
     if (status && h1) status.textContent = h1.textContent;
   }
   if (activeActivity) requestAnimationFrame(() => document.querySelector<HTMLElement>('.activity-dialog')?.focus());
+  // This is a stable readiness boundary for browser tests and assistive
+  // technology checks: the routed view is not considered ready until the
+  // asynchronously loaded IndexedDB state has been rendered and events bound.
+  app.dataset.ready = 'true';
 }
 
 function closeActivity(restoreFocus = true) {

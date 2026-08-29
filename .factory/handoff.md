@@ -1,66 +1,66 @@
-# Linux Kid Lab — verification 5 handoff
+# Linux Kid Lab — repair 5 handoff
 
 ## Result
 
-**FAIL — candidate `0ca7c7fcff0850f140c321e21556a3e739ff5cc1` is not
-release-ready.**
+**PASS — release 1.0.3 repairs candidate
+`0ca7c7fcff0850f140c321e21556a3e739ff5cc1`.**
 
-- Work order: `linux-kid-lab-verify-5`
-- Tested URL: <https://linux-kid-lab.sociobot.in>
-- Full report: `.factory/verification-5.md`
-- Fresh evidence: `.factory/verification-5-artifacts/` and
-  `.factory/evidence/live-cold-desktop.png`
+## What changed
 
-The live deployment matches the candidate byte-for-byte for sampled HTML, JS,
-CSS, PWA, image, and 404 files. This is not a deployment-only failure.
+- The failing desktop/mobile route matrix no longer places 28 route, theme,
+  viewport, reduced-motion, and axe scans inside one 30-second Playwright
+  test. It is now 28 independently isolated Playwright tests. Each receives a
+  fresh browser context from the page fixture, so IndexedDB, service-worker,
+  and route state cannot leak into the next matrix case.
+- The app now exposes `#app[data-ready="true"]` only after asynchronous
+  IndexedDB state has rendered and event handlers are bound. Every matrix case
+  explicitly waits for it after navigation before running the unchanged h1,
+  main, overflow, reduced-motion, and serious/critical axe assertions.
+- Each isolated case has a deliberate 20-second timeout. This allows one cold
+  state open, worker registration, and complete axe scan while detecting a
+  stalled route quickly; it does not weaken any product assertion.
+- The PWA shell is release `linux-kid-lab-v9`; the manifest start URL and
+  package version are `1.0.3`. Existing installed clients therefore discover
+  the repaired worker and receive the normal update notice.
 
-## Release blocker
+## Failure reproduction and regression coverage
 
-`npm test` failed with **26 passed and 1 timed out**. The desktop/mobile,
-light/dark, reduced-motion, and axe route-matrix test exceeds Playwright's
-30-second test timeout. Its isolated rerun timed out again at the same limit,
-while navigating to `/print?demo=1`.
+The original test was a single sequential 28-case loop under Playwright's
+30-second default test timeout. Verification 5 recorded the failure as 26
+passing tests and this test timing out. In a detached worktree at the exact
+candidate SHA, the isolated legacy matrix also returned a failed Playwright
+run once; a subsequent warm full run passed, confirming the timing-sensitive
+nature of the issue rather than a product assertion failure.
 
-The matrix assertions pass when exercised independently against production,
-but the repository quality gate itself does not. Split that test or add a
-justified per-test timeout, then require a clean full-suite pass.
+The focused replacement is tagged `@regression:route-matrix` and has 28
+independent cases. It passed 28/28; its combined offline check passed 29/29.
 
-## Other gap
+## Verification
 
-The advertised one-time $12 printable pack cannot currently be purchased
-because the Sociobot billing product is not registered. The UI honestly says
-purchase setup is unavailable and renders no dead checkout link. Existing
-license restore works; the free product remains useful.
+- `npm ci && npm run build`: PASS. The exact production build command is
+  `npm run build`; it generated `dist/` with `dist/index.html` at its root.
+- `npm test`: PASS, 54/54 Chromium tests. This includes browser, mobile,
+  keyboard, accessibility/axe, privacy, offline reload, IndexedDB sandbox,
+  licensing, static routing, and PWA checks.
+- Every literal command in `.factory/claims.json`: PASS, 18/18 on release
+  1.0.3.
+- `npx playwright test --grep "@regression:route-matrix|@claim:offline-reload"`:
+  PASS, 29/29.
+- `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173 <evidence-dir>`:
+  PASS. HTTP 200; no console errors; title, `lang=en`, one h1, main landmark,
+  image alt text, and named buttons verified.
+- Final build sizes: JavaScript 32.18 kB raw / 11.52 kB gzip; CSS 17.65 kB
+  raw / 4.61 kB gzip. Both remain inside the static-PWA budget.
 
-## Verification summary
+## Deployment
 
-- `npm ci`: PASS; 22 packages, 0 vulnerabilities.
-- Every exact `.factory/claims.json` command: PASS, 18/18.
-- `npm test`: **FAIL; 26 passed, 1 timed out**.
-- Isolated failing-test rerun: **FAIL; timed out again**.
-- `npm run build`: PASS; TypeScript and Vite produced `dist/`.
-- No separate lint script exists.
-- First-read and one-click demo gate: PASS on desktop and 390px mobile.
-- Live normal, boundary, invalid-input, and recovery flows: PASS.
-- Privacy/request log and security/cache headers: PASS.
-- License allowance: requests 1–30 returned 200; request 31 returned 429 with
-  `Retry-After: 3`.
-- Offline reload and service-worker update notification: PASS.
-- Live accessibility matrix: 28/28 checks with no serious/critical axe issue,
-  no overflow, and reduced motion respected.
-- Keyboard modal flow and 44px mobile targets: PASS.
-- Live Lighthouse mobile: 95 performance, 100 accessibility, 100 best
-  practices, 100 SEO; LCP 1.2s, CLS 0, total transfer 66KiB.
-- Deployment identity: eight sampled files match local `dist/` by SHA-256.
+Target: Azure Static Web App `sf-linux-kid-lab` in resource group `sociobot`,
+production environment. The final deployment URL and live identity evidence
+are recorded after the static artifact is uploaded.
 
-## Reproduce
+## Known gaps
 
-```sh
-npm ci
-npm test
-npx playwright test --grep "desktop and mobile route matrix"
-npm run build
-```
-
-No product code was modified during verification. Only this handoff, the
-verification report, and verification evidence were added.
+The optional $12 activity-pack checkout remains intentionally unavailable
+until the external Sociobot billing product is registered. The free shelf,
+local progress, export, printable tokens, and license restore flow remain
+available; no dead checkout link is shown.
