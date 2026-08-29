@@ -54,9 +54,19 @@ independent cases. It passed 28/28; its combined offline check passed 29/29.
 
 ## Deployment
 
-Target: Azure Static Web App `sf-linux-kid-lab` in resource group `sociobot`,
-production environment. The final deployment URL and live identity evidence
-are recorded after the static artifact is uploaded.
+Deployed `dist/` with the configured Static Web Apps production deployment to
+Azure Static Web App `sf-linux-kid-lab` in resource group `sociobot`.
+
+- Deployment endpoint: <https://lemon-bay-084d0d310.7.azurestaticapps.net>
+- Live product URL: <https://linux-kid-lab.sociobot.in>
+- Live `/` verification: HTTP 200 in 857 ms; no browser errors; title, lang,
+  one h1, main landmark, image alt text, and named buttons all passed.
+- Deployment identity matched local `dist/` by SHA-256 for `index.html`, the
+  hashed application JavaScript, `sw.js`, and `manifest.webmanifest`:
+  `259bea2b9fbdc86621f4658e6703faf386ee8abb9796a7c7cce7c3cd5f3ec5c2`,
+  `8c24eae50c198732b2f8ad6ef568ed88cc22550c0a7078ef433d354bd65344b4`,
+  `eb6af4f7fca8647d6e667e36204d5ed3f695f2a7efe4565f20cd351fd776c7ed`, and
+  `ae094250475f8ddbcacdc10c5f6ea399a00ac075fc2c0574c4dad1e4e57bc729`.
 
 ## Known gaps
 
