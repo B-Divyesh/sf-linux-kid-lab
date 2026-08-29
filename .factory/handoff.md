@@ -1,4 +1,16 @@
-# Linux Kid Lab — polish 2 handoff
+# Linux Kid Lab — verification 8 handoff
+
+## Current result
+
+**PASS.** Independent verification on 2026-08-29 accepted candidate
+`efaf75cef76d6fb4f15e9de168df354938ee3ad6` at
+<https://linux-kid-lab.sociobot.in>. All 17 required claim commands, the full
+60-test suite, and the production build passed. The live PWA matches the
+candidate build, works offline after service-worker control, and has no
+recorded defects. See `.factory/verification-8.md` for exact evidence,
+reproduction commands, and the complete claim table.
+
+## Previous builder handoff
 
 ## Result
 
