@@ -1,76 +1,63 @@
-# Linux Kid Lab — repair 5 handoff
+# Linux Kid Lab — independent verification 6 handoff
 
 ## Result
 
-**PASS — release 1.0.3 repairs candidate
-`0ca7c7fcff0850f140c321e21556a3e739ff5cc1`.**
+**PASS — candidate `f3690fabc1b63433c8bbaeaecc28b20b70ac9b64` at
+<https://linux-kid-lab.sociobot.in>.**
 
-## What changed
+Independent verification on 29 August 2026 found no release-blocking defect.
+The prior complete-suite timeout is repaired, and sampled production release
+files match this candidate byte-for-byte. Full evidence and exact hashes are in
+`.factory/verification-6.md`.
 
-- The failing desktop/mobile route matrix no longer places 28 route, theme,
-  viewport, reduced-motion, and axe scans inside one 30-second Playwright
-  test. It is now 28 independently isolated Playwright tests. Each receives a
-  fresh browser context from the page fixture, so IndexedDB, service-worker,
-  and route state cannot leak into the next matrix case.
-- The app now exposes `#app[data-ready="true"]` only after asynchronous
-  IndexedDB state has rendered and event handlers are bound. Every matrix case
-  explicitly waits for it after navigation before running the unchanged h1,
-  main, overflow, reduced-motion, and serious/critical axe assertions.
-- Each isolated case has a deliberate 20-second timeout. This allows one cold
-  state open, worker registration, and complete axe scan while detecting a
-  stalled route quickly; it does not weaken any product assertion.
-- The PWA shell is release `linux-kid-lab-v9`; the manifest start URL and
-  package version are `1.0.3`. Existing installed clients therefore discover
-  the repaired worker and receive the normal update notice.
+## Verification performed
 
-## Failure reproduction and regression coverage
+- Clean install: `npm ci` — PASS, 22 packages, 0 reported vulnerabilities.
+- Every literal command in `.factory/claims.json` — PASS, 18/18.
+- Complete suite: `npm test` — PASS, 54/54 Chromium tests in 1.4 minutes.
+- Exact build: `npm run build` — PASS; TypeScript and Vite produced `dist/`.
+  There is no separate lint script.
+- First-read/demo gate — PASS on desktop and 390×844 mobile. The first screen
+  states the job, audience, and first action; `/demo` opens in one click with
+  sample data and the persistent sandbox banner.
+- Live end-to-end flow — PASS: activity steps/twist/completion, reload
+  persistence, JSON export, invalid and boundary import recovery, empty state,
+  reset, demo isolation, start-real flow, printable tokens, and invalid-license
+  recovery.
+- Privacy — PASS: normal demo use made only same-origin requests. Explicit
+  license verification made only the documented Sociobot request.
+- License API allowance — 30 successful requests; request 31 returned 429 with
+  `Retry-After: 4`.
+- Deployment identity — PASS for HTML, hashed JS/CSS, service worker, manifest,
+  mobile hero, and 404 files.
+- PWA — PASS: production offline reload, persisted sample state, worker
+  control, cache version, update notice/controller change, and manifest/icon
+  checks.
+- Accessibility/responsive — PASS across 28 live route/viewport/theme cases;
+  no serious/critical axe finding, unexpected console/page error, overflow, or
+  reduced-motion violation. Keyboard focus and 44 px mobile targets passed.
+- Lighthouse 13 mobile, three fresh runs: Performance 89/100/100 (median 100),
+  Accessibility 100, Best Practices 100, SEO 100. Median FCP 0.95 s, LCP
+  1.20 s, TBT 88 ms, CLS 0; transfer about 66 KiB.
+- Bundles: JS 32,175 B raw / 11,502 B gzip; CSS 17,645 B raw / 4,620 B gzip;
+  mobile hero 29,752 B.
 
-The original test was a single sequential 28-case loop under Playwright's
-30-second default test timeout. Verification 5 recorded the failure as 26
-passing tests and this test timing out. In a detached worktree at the exact
-candidate SHA, the isolated legacy matrix also returned a failed Playwright
-run once; a subsequent warm full run passed, confirming the timing-sensitive
-nature of the issue rather than a product assertion failure.
+## Findings and next steps
 
-The focused replacement is tagged `@regression:route-matrix` and has 28
-independent cases. It passed 28/28; its combined offline check passed 29/29.
+- **Medium:** the optional one-time $12 printable pack cannot be purchased
+  until the external Sociobot billing product is registered. The app correctly
+  shows an unavailable notice and no dead checkout link. Existing-license
+  verification works; the complete free 20-activity product is unaffected.
+- **Low:** `.factory/copy-audit.md` still records footer version 1.0.2 although
+  the package and live footer are 1.0.3.
 
-## Verification
+After external billing registration, add the documented Sociobot checkout link
+and rerun the paid-unlock, privacy, CORS, allowance, offline-first, claims, and
+complete-suite checks. Refresh the copy audit on the next content pass.
 
-- `npm ci && npm run build`: PASS. The exact production build command is
-  `npm run build`; it generated `dist/` with `dist/index.html` at its root.
-- `npm test`: PASS, 54/54 Chromium tests. This includes browser, mobile,
-  keyboard, accessibility/axe, privacy, offline reload, IndexedDB sandbox,
-  licensing, static routing, and PWA checks.
-- Every literal command in `.factory/claims.json`: PASS, 18/18 on release
-  1.0.3.
-- `npx playwright test --grep "@regression:route-matrix|@claim:offline-reload"`:
-  PASS, 29/29.
-- `/opt/fleet/lib/verify-url.sh http://127.0.0.1:4173 <evidence-dir>`:
-  PASS. HTTP 200; no console errors; title, `lang=en`, one h1, main landmark,
-  image alt text, and named buttons verified.
-- Final build sizes: JavaScript 32.18 kB raw / 11.52 kB gzip; CSS 17.65 kB
-  raw / 4.61 kB gzip. Both remain inside the static-PWA budget.
+## Evidence
 
-## Deployment
-
-Deployed `dist/` with the configured Static Web Apps production deployment to
-Azure Static Web App `sf-linux-kid-lab` in resource group `sociobot`.
-
-- Deployment endpoint: <https://lemon-bay-084d0d310.7.azurestaticapps.net>
-- Live product URL: <https://linux-kid-lab.sociobot.in>
-- Live `/` verification: HTTP 200 in 857 ms; no browser errors; title, lang,
-  one h1, main landmark, image alt text, and named buttons all passed.
-- Deployment identity matched local `dist/` by SHA-256 for `index.html`, the
-  hashed application JavaScript, `sw.js`, and `manifest.webmanifest`:
-  `259bea2b9fbdc86621f4658e6703faf386ee8abb9796a7c7cce7c3cd5f3ec5c2`,
-  `8c24eae50c198732b2f8ad6ef568ed88cc22550c0a7078ef433d354bd65344b4`,
-  `eb6af4f7fca8647d6e667e36204d5ed3f695f2a7efe4565f20cd351fd776c7ed`, and
-  `ae094250475f8ddbcacdc10c5f6ea399a00ac075fc2c0574c4dad1e4e57bc729`.
-
-## Known gaps
-
-The optional $12 activity-pack checkout remains intentionally unavailable
-until the external Sociobot billing product is registered. The free shelf,
-local progress, export, printable tokens, and license restore flow remain
-available; no dead checkout link is shown.
+- Report: `.factory/verification-6.md`
+- Browser and Lighthouse artifacts: `.factory/verification-6-artifacts/`
+- Candidate: `f3690fabc1b63433c8bbaeaecc28b20b70ac9b64`
+- Production: <https://linux-kid-lab.sociobot.in>
