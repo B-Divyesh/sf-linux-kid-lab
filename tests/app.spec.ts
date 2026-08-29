@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFileSync } from 'node:fs';
 
 async function expectNoSeriousAxeIssues(page: Page) {
   const result = await new AxeBuilder({ page }).analyze();
@@ -262,6 +263,14 @@ test('an unavailable purchase setup never renders a dead checkout link', async (
   await page.goto('/');
   await expect(page.getByText('Purchase setup is unavailable right now. The free shelf and progress tokens remain available.')).toBeVisible();
   await expect(page.locator('a[href*="api.sociobot.in/api/v1/products/linux-kid-lab/checkout"]')).toHaveCount(0);
+});
+
+test('static deployment config gives unknown paths a real 404 and hashes get immutable caching', () => {
+  const config = JSON.parse(readFileSync('public/staticwebapp.config.json', 'utf8'));
+  expect(config.navigationFallback).toBeUndefined();
+  expect(config.responseOverrides['404']).toEqual({ rewrite: '/404.html', statusCode: 404 });
+  expect(config.routes.slice(0, 7).map((route: { route: string }) => route.route)).toEqual(['/', '/demo', '/settings', '/privacy', '/terms', '/print', '/404']);
+  expect(config.routes.find((route: { route: string }) => route.route === '/assets/*').headers['Cache-Control']).toBe('public, max-age=31536000, immutable');
 });
 
 test('dark system theme has no serious axe issues on every product route', async ({ page }) => {
