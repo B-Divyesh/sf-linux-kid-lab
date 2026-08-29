@@ -10,3 +10,26 @@ progress.meter::-webkit-progress-bar{background:transparent}
 progress.meter::-webkit-progress-value{background:var(--yellow)}
 progress.meter::-moz-progress-bar{background:var(--yellow)}
 .privacy-block .eyebrow{color:var(--paper-light)}
+
+/* Repair pass: compact mobile first-read order and consistently sized targets. */
+.wordmark{min-height:44px;display:inline-flex;align-items:center}
+.site-header nav a,footer a,.tool-list a{min-width:44px;min-height:44px;display:inline-flex;align-items:center}
+.band-list label{cursor:pointer;min-height:44px;display:flex;gap:10px;align-items:flex-start}
+.band-list label>span{flex:1}
+.band-list input{width:44px;height:44px;margin:0;flex:0 0 44px}
+.purchase-unavailable{border:2px dashed var(--muted);padding:14px 16px;font-weight:700;max-width:42ch}
+
+@media(max-width:800px){
+  .hero{padding:32px 22px 48px;gap:24px}
+  .hero .kicker{grid-row:1}.hero h1{grid-row:2}.hero .lede{grid-row:3}.hero .hero-action{grid-row:4}.hero .facts{grid-row:5}
+  .hero-art{grid-row:6;margin:0 10px}
+  .hero-action{margin:20px 0 8px}
+}
+
+@media(prefers-color-scheme:dark){
+  :root{--red:#f1857a;--blue:#8ed7f0;--muted:#d9cdbb;--danger:#ffaaa1}
+  .hero-art figcaption{color:#201c1b}
+  .progress-strip .eyebrow{color:#201c1b}
+  .privacy-block .eyebrow{color:#f5eccf}
+  .band-list input:checked+span{color:#201c1b}
+}

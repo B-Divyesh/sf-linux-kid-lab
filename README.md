@@ -18,10 +18,11 @@ database and never change the real shelf.
 - Local progress, JSON export/import, and printable progress tokens
 - Offline use after the first connected visit
 - Optional links to Tux Paint, Scratch, Krita, Audacity, and other open tools
-- A $12 one-time printable pack through Sociobot billing
+- An optional printable pack for active Sociobot licenses
 
-The printable pack adds cut-out activity cards and a four-week weekend mix. All
-activities, progress features, export, and accessibility features remain free.
+An active printable-pack license adds cut-out activity cards and a four-week
+weekend mix. All activities, progress features, export, and accessibility
+features remain free. Purchase setup is not currently available in the app.
 
 ## Run and verify
 

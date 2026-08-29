@@ -4,13 +4,13 @@ import { clearDemo, demoState, freshState, loadState, saveState, type LabState }
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 const slug = 'linux-kid-lab';
-const checkoutUrl = `https://api.sociobot.in/api/v1/products/${slug}/checkout`;
 let demo = location.pathname === '/demo' || new URLSearchParams(location.search).get('demo') === '1';
 let state: LabState = freshState();
 let activeActivity: Activity | null = null;
 let statusMessage = '';
 let importError = '';
 let licenseNotice = '';
+let licenseDetailsOpen = false;
 let lastActivityId = '';
 
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]!));
@@ -130,9 +130,9 @@ function demoPage() {
 
 function paidSection() {
   const licensed = isLicensed();
-  return `<section class="paid-section" aria-labelledby="pack-heading"><div class="price-sticker"><span>$12</span><small>one time</small></div><div><span class="eyebrow">Optional take-home pack</span><h2 id="pack-heading">Print the whole activity deck</h2><p>The free shelf includes all 20 activities and progress tokens.</p><p>The pack adds cut-out activity cards and a four-week weekend mix.</p>
-    ${licensed ? `<p class="license-ok">✓ Pack active on this device</p><a class="button primary" href="/print?pack=1" data-nav>Print the activity pack</a>` : `<a class="button primary" href="${checkoutUrl}" rel="external">Buy the $12 pack <span class="sr-only">(external checkout)</span></a>`}
-    <details><summary>Have a license?</summary><form id="license-form"><label for="license">Paste your license</label><div class="inline-form"><input id="license" name="license" autocomplete="off" required><button class="button secondary" type="submit" aria-label="Verify license">Verify license</button></div><p class="form-note">Verification uses Sociobot billing. The free shelf stays available offline.</p><p class="error" role="status">${escapeHtml(licenseNotice)}</p></form></details>
+  return `<section class="paid-section" aria-labelledby="pack-heading"><div class="price-sticker"><span>PACK</span><small>licensed</small></div><div><span class="eyebrow">Optional take-home pack</span><h2 id="pack-heading">Print the whole activity deck</h2><p>The free shelf includes all 20 activities and progress tokens.</p><p>An active pack license adds cut-out activity cards and a four-week weekend mix.</p>
+    ${licensed ? `<p class="license-ok">✓ Pack active on this device</p><a class="button primary" href="/print?pack=1" data-nav>Print the activity pack</a>` : `<p class="purchase-unavailable" role="status">Purchase setup is unavailable right now. The free shelf and progress tokens remain available.</p>`}
+    <details ${licenseDetailsOpen ? 'open' : ''}><summary>Have a license?</summary><form id="license-form"><label for="license">Paste your license</label><div class="inline-form"><input id="license" name="license" autocomplete="off" required><button class="button secondary" type="submit" aria-label="Verify license">Verify license</button></div><p class="form-note">Verification uses Sociobot billing. The free shelf stays available offline.</p><p class="error" role="status">${escapeHtml(licenseNotice)}</p></form></details>
     <p class="legal-note">Sociobot is the merchant of record. Refunds are handled there. See <a href="/terms" data-nav>terms</a>.</p></div></section>`;
 }
 
@@ -171,7 +171,7 @@ function privacyPage() {
 }
 
 function termsPage() {
-  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 28 August 2026</span><h1 tabindex="-1">Terms for using Linux Kid Lab</h1><p>You may use the free activities at home, in a classroom, or in a community group.</p><h2>Parent supervision</h2><p>An adult decides which external tools and websites a child may open. Follow each tool’s own terms.</p><h2>One-time activity pack</h2><p>The $12 purchase adds printable activity cards and a weekend mix. It does not remove the free activities or progress tokens.</p><p>Sociobot is the merchant of record. A refund revokes the pack license.</p><h2>No warranty</h2><p>The site is provided as available. Keep your exported copy if saved progress matters to you.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p></main>`);
+  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Terms for using Linux Kid Lab</h1><p>You may use the free activities at home, in a classroom, or in a community group.</p><h2>Parent supervision</h2><p>An adult decides which external tools and websites a child may open. Follow each tool’s own terms.</p><h2>Activity pack licenses</h2><p>An active pack license adds printable activity cards and a weekend mix. It does not remove the free activities or progress tokens.</p><p>Sociobot is the merchant of record. A refund revokes the pack license.</p><h2>No warranty</h2><p>The site is provided as available. Keep your exported copy if saved progress matters to you.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p></main>`);
 }
 
 function notFoundPage() {
@@ -220,6 +220,7 @@ function announce(message: string) {
 }
 
 async function verifyLicense(token: string) {
+  licenseDetailsOpen = true;
   licenseNotice = 'Checking the license…'; render();
   try {
     const response = await fetch(`https://api.sociobot.in/api/v1/products/${slug}/verify?license=${encodeURIComponent(token)}`);
@@ -268,7 +269,7 @@ function bindEvents() {
   const importFile = document.querySelector<HTMLInputElement>('#import-file');
   importFile?.addEventListener('change', () => importData(importFile.files?.[0]));
   const licenseForm = document.querySelector<HTMLFormElement>('#license-form');
-  licenseForm?.addEventListener('submit', event => { event.preventDefault(); const token=String(new FormData(licenseForm).get('license')||'').trim(); if(token){ localStorage.setItem(licenseTokenKey(),token); verifyLicense(token); } });
+  licenseForm?.addEventListener('submit', event => { event.preventDefault(); const token=String(new FormData(licenseForm).get('license')||'').trim(); if(token){ licenseDetailsOpen=true; localStorage.setItem(licenseTokenKey(),token); verifyLicense(token); } });
   document.querySelector<HTMLElement>('.activity-dialog')?.addEventListener('keydown', trapDialogFocus);
 }
 

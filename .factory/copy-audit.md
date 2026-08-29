@@ -23,7 +23,8 @@ sample shelf.
 | 10 | Tool links may need an installed app or internet access. |
 | 7 | Every activity also works with paper. |
 | 10 | The free shelf includes all 20 activities and progress tokens. |
-| 12 | The pack adds cut-out activity cards and a four-week weekend mix. |
+| 12 | An active pack license adds cut-out activity cards and a four-week weekend mix. |
+| 14 | Purchase setup is unavailable right now. The free shelf and progress tokens remain available. |
 | 7 | The free shelf stays available offline. |
 | 6 | Sociobot is the merchant of record. |
 | 5 | Refunds are handled there. |

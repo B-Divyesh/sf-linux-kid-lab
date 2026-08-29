@@ -1,5 +1,13 @@
 {
   "navigationFallback": {"rewrite":"/index.html","exclude":["/assets/*","/*.{png,webp,svg,xml,txt,json,js,css,html}"]},
+  "routes": [
+    {"route":"/assets/*","headers":{"Cache-Control":"public, max-age=31536000, immutable"}},
+    {"route":"/*.avif","headers":{"Cache-Control":"public, max-age=31536000, immutable"}},
+    {"route":"/*.webp","headers":{"Cache-Control":"public, max-age=31536000, immutable"}},
+    {"route":"/*.png","headers":{"Cache-Control":"public, max-age=31536000, immutable"}},
+    {"route":"/sw.js","headers":{"Cache-Control":"no-cache, no-store, must-revalidate"}}
+  ],
+  "responseOverrides": {"404":{"rewrite":"/404.html","statusCode":404}},
   "globalHeaders": {
     "X-Content-Type-Options":"nosniff",
     "Referrer-Policy":"strict-origin-when-cross-origin",

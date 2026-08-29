@@ -18,15 +18,15 @@ test('landing page explains the job and has a sound document outline', async ({ 
 });
 
 test('@claim:twenty-activities the free shelf contains 20 activities', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Ages 11–13' }).click();
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Ages 5–7' }).click();
   await expect(page.locator('.activity-card')).toHaveCount(20);
   await expect(page.getByText('20 activities', { exact: true })).toBeVisible();
 });
 
 test('@claim:three-steps every one of the 20 activity cards opens three steps', async ({ page }) => {
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Ages 11–13' }).click();
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Ages 5–7' }).click();
   const activityIds = await page.locator('[data-open]').evaluateAll(buttons => buttons.map(button => button.getAttribute('data-open')));
   expect(activityIds).toHaveLength(20);
   for (const id of activityIds) {
@@ -101,8 +101,8 @@ test('@claim:open-tool-suggestion every activity has a working official tool lin
     'https://github.com/inkscape/inkscape/releases/latest',
     'https://stellarium.org/'
   ]);
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Ages 11–13' }).click();
+  await page.goto('/demo');
+  await page.getByRole('button', { name: 'Ages 5–7' }).click();
   const activityIds = await page.locator('[data-open]').evaluateAll(buttons => buttons.map(button => button.getAttribute('data-open')));
   expect(activityIds).toHaveLength(20);
   const usedUrls = new Set<string>();
@@ -150,13 +150,13 @@ test('@claim:offline-reload the demo reloads after the network is disabled', asy
   await page.reload();
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   const cachedBytes = await page.evaluate(async () => {
-    const cache = await caches.open('linux-kid-lab-v5');
-    const js = await cache.match('/assets/app.js');
-    const css = await cache.match('/assets/app.css');
-    return { js: (await js?.text())?.length ?? 0, css: (await css?.text())?.length ?? 0 };
+    const cache = await caches.open('linux-kid-lab-v6');
+    const keys = await cache.keys();
+    const assets = keys.filter(key => /\/assets\/.*\.(js|css)$/.test(new URL(key.url).pathname));
+    return Promise.all(assets.map(async asset => (await (await cache.match(asset))?.text())?.length ?? 0));
   });
-  expect(cachedBytes.js).toBeGreaterThan(1_000);
-  expect(cachedBytes.css).toBeGreaterThan(1_000);
+  expect(cachedBytes).toHaveLength(2);
+  expect(cachedBytes.every(size => size > 1_000)).toBe(true);
   await context.setOffline(true);
   await page.reload({ waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { level: 1 })).toHaveText("Pick the sample family’s next activity");
@@ -183,7 +183,9 @@ test('@claim:paid-pack license verification activates the paid print pack', asyn
     contentType: 'application/json',
     body: JSON.stringify({ valid: true, reason: 'ok', expires_at: null })
   }));
-  await page.goto('/?demo=1');
+  await page.goto('/demo');
+  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
+  await expect(page).toHaveURL(/\/?demo=1/);
   await page.getByText('Have a license?').click();
   await page.getByLabel('Paste your license').fill('test-license');
   await page.getByRole('button', { name: 'Verify license' }).click();
@@ -197,6 +199,88 @@ test('@claim:paid-pack license verification activates the paid print pack', asyn
     'Week 3: Moon postcard and one-button toy',
     'Week 4: Paper controller and remix rules'
   ]);
+});
+
+test('@claim:no-accounts-or-ads the demo asks for no account and contains no ads or chat', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
+  await expect(page.getByText('There are no accounts, ads, chat, scores, or behavior tracking.')).toBeVisible();
+  await expect(page.locator('input[type="password"], iframe, [role="dialog"][aria-label*="chat" i]')).toHaveCount(0);
+  const sources = await page.locator('[src]').evaluateAll(nodes => nodes.map(node => node.getAttribute('src')));
+  expect(sources.filter(source => source?.startsWith('http'))).toEqual([]);
+});
+
+test('@claim:local-age-bands parent age choices remain in the demo browser after reload', async ({ page }) => {
+  await page.goto('/demo');
+  await page.getByRole('link', { name: 'Parent setup' }).click();
+  await page.getByLabel('Ages 5–7').check();
+  await page.getByRole('button', { name: 'Save age bands' }).click();
+  await page.reload();
+  await expect(page.getByLabel('Ages 5–7')).toBeChecked();
+  await expect(page.getByLabel('Ages 8–10')).toBeChecked();
+  await expect(page.getByLabel('Ages 11–13')).toBeChecked();
+});
+
+test('@claim:license-privacy an explicit license check sends a token only to Sociobot billing', async ({ page }) => {
+  const requests: string[] = [];
+  page.on('request', request => requests.push(request.url()));
+  await page.route('https://api.sociobot.in/api/v1/products/linux-kid-lab/verify?license=test-license', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ valid: false, reason: 'invalid' })
+  }));
+  await page.goto('/demo');
+  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
+  await page.getByText('Have a license?').click();
+  await page.getByLabel('Paste your license').fill('test-license');
+  await page.getByRole('button', { name: 'Verify license' }).click();
+  await expect(page.getByText('This license is not active. Check the token or use the buy link.')).toBeVisible();
+  const external = requests.filter(url => new URL(url).origin !== 'http://127.0.0.1:4173');
+  expect(external).toEqual(['https://api.sociobot.in/api/v1/products/linux-kid-lab/verify?license=test-license']);
+});
+
+test('mobile first-read shows the demo action before the fold', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  const action = await page.getByRole('link', { name: 'Try it with sample data' }).boundingBox();
+  expect(action).not.toBeNull();
+  expect(action!.y + action!.height).toBeLessThanOrEqual(844);
+});
+
+test('invalid license recovery remains open and visible', async ({ page }) => {
+  await page.route('https://api.sociobot.in/api/v1/products/linux-kid-lab/verify?license=not-active', route => route.fulfill({
+    status: 200, contentType: 'application/json', body: JSON.stringify({ valid: false, reason: 'invalid' })
+  }));
+  await page.goto('/demo');
+  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
+  await page.getByText('Have a license?').click();
+  await page.getByLabel('Paste your license').fill('not-active');
+  await page.getByRole('button', { name: 'Verify license' }).click();
+  await expect(page.locator('details')).toHaveAttribute('open', '');
+  await expect(page.getByText('This license is not active. Check the token or use the buy link.')).toBeVisible();
+});
+
+test('an unavailable purchase setup never renders a dead checkout link', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByText('Purchase setup is unavailable right now. The free shelf and progress tokens remain available.')).toBeVisible();
+  await expect(page.locator('a[href*="api.sociobot.in/api/v1/products/linux-kid-lab/checkout"]')).toHaveCount(0);
+});
+
+test('dark system theme has no serious axe issues on every product route', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
+  for (const path of ['/', '/demo', '/settings?demo=1', '/privacy?demo=1', '/terms?demo=1', '/print?demo=1', '/missing-tape']) {
+    await page.goto(path);
+    await expectNoSeriousAxeIssues(page);
+  }
+});
+
+test('mobile header, footer, tool links, and age checkboxes have 44px targets', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/settings?demo=1');
+  const sizes = await page.locator('.site-header a, footer a, .tool-list a, .band-list input').evaluateAll(nodes => nodes.filter(node => getComputedStyle(node).display !== 'none').map(node => {
+    const rect = node.getBoundingClientRect();
+    return { width: rect.width, height: rect.height };
+  }));
+  expect(sizes.length).toBeGreaterThan(0);
+  expect(sizes.filter(size => size.width < 44 || size.height < 44), JSON.stringify(sizes)).toEqual([]);
 });
 
 test('privacy, terms, and unknown routes have distinct titles and one h1', async ({ page }) => {

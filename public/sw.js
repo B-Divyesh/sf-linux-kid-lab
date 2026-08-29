@@ -1,10 +1,18 @@
-const VERSION = 'linux-kid-lab-v5';
-const SHELL = ['/', '/index.html', '/assets/app.js', '/assets/app.css', '/hero-cassette.avif', '/hero-cassette-640.avif', '/hero-cassette.webp', '/hero-cassette-640.webp', '/hero-cassette.jpg', '/favicon.svg', '/manifest.webmanifest', '/offline.html', '/offline.css'];
+const VERSION = 'linux-kid-lab-v6';
+const SHELL = ['/', '/index.html', '/demo', '/settings', '/privacy', '/terms', '/print', '/hero-cassette.avif', '/hero-cassette-640.avif', '/hero-cassette.webp', '/hero-cassette-640.webp', '/hero-cassette.jpg', '/favicon.svg', '/manifest.webmanifest', '/offline.html', '/offline.css'];
+
+async function appAssets() {
+  const page = await fetch(new Request('/index.html', { cache: 'reload' }));
+  if (!page.ok) throw new Error('Could not read the app shell');
+  const markup = await page.text();
+  return [...markup.matchAll(/(?:src|href)="(\/assets\/[^"?#]+)"/g)].map(match => match[1]);
+}
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(VERSION);
-    await Promise.all(SHELL.map(async url => {
+    const urls = [...SHELL, ...await appAssets()];
+    await Promise.all(urls.map(async url => {
       const response = await fetch(new Request(url, { cache: 'reload' }));
       if (!response.ok) throw new Error(`Could not cache ${url}`);
       await cache.put(url, response);
