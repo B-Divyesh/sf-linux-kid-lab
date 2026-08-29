@@ -1,88 +1,96 @@
-# Linux Kid Lab — repair 3 handoff
+# Linux Kid Lab — verification 4 handoff
 
-- Work order: `linux-kid-lab-repair-3`
-- Base verifier report: `74f760475fdc9b5c1c680ce1bb4308d9f4de7019`
-- Repaired product commit: `763a02a0b4e65ff5a7d49b71093e89f49ab6aae5`
+## Result
+
+**FAIL — release-blocking.**
+
+- Work order: `linux-kid-lab-verify-4`
+- Tested candidate: `1d88091f1ab6a4387ac22ade737e1cf06720a947`
 - Live URL: <https://linux-kid-lab.sociobot.in>
-- Deployment: Azure Static Web App `sf-linux-kid-lab`, production deployment on 29 August 2026.
+- Verification date: 29 August 2026
+- Full report: [`.factory/verification-4.md`](verification-4.md)
 
-## Repaired release blockers
+The live deployment matches the candidate. This result is based on fresh
+product evidence and is not the earlier deployment-only failure.
 
-1. Reproduced the verifier's failure before editing: a 404 HTML document served
-   with `style-src 'self'` emitted Chromium's blocked-inline-style CSP error.
-   `404.html` now links the self-hosted `404.css`, retains the restrictive CSP,
-   and has no inline style element. The v7 service worker precaches both 404
-   files.
-2. Added a browser regression that serves the built 404 as HTTP 404 with its
-   production `style-src 'self'` header. It asserts the stylesheet is applied,
-   the cassette colour is rendered, and no CSP/page errors occur. Chromium's
-   normal `Failed to load resource: 404` navigation diagnostic is explicitly
-   distinguished from page/CSP errors.
-3. Registered and tested the omitted paper promise. Every activity dialog now
-   includes a specific paper alternative, and `@claim:paper-alternatives`
-   opens all 20 cards from `/demo` and requires it.
-4. Audited the related README promises. Added observable claims for the demo
-   IndexedDB namespace/lifecycle, clearing saved progress, and unavailable
-   checkout; removed the untestable free-accessibility wording and the
-   unobservable license-local-storage wording. All 18 claim ids have exactly
-   one matching `@claim:` test.
-5. Fixed an adjacent sandbox safety issue discovered during coverage: demo
-   settings now clear only sample progress, never real progress. The
-   `@claim:demo-sandbox` test exercises this before it leaves demo mode.
+## Release blockers and defects
 
-## Verification
+1. **High — modal keyboard focus escapes.** In live `/demo`, use Tab to focus
+   an activity, press Enter, then immediately press Shift+Tab. Focus moves from
+   the focused dialog container to the footer's project-notes link outside the
+   modal. Escape then leaves the dialog open because the keyboard handler is
+   scoped to the dialog. Add focus containment, global modal Escape handling,
+   opener restoration, and an immediate reverse-tab regression.
+2. **Medium — remaining mobile touch targets are too short.** At 390px,
+   `Print progress tokens` is 24.8px high; `Read the privacy note`, paid-section
+   `terms`, and both contact email links are 16–17px high. The contract requires
+   44×44px for every interactive target.
+3. **Medium — visible version mismatch.** The live footer says `Version 1.0.1`;
+   `package.json` is `1.0.2`.
+4. **Medium — paid-tier copy omits the price and one-time purchase wording.**
+   Purchase setup is honestly unavailable and no dead checkout link is shown,
+   but the visible paid section contains neither `$12` nor “one-time.”
+5. **Low — response/copy polish.** The mobile hero AVIF is served as
+   `application/octet-stream`, and the mandatory copy audit omits the visible
+   vague caption `One tape. Many ways to make.` plus the footer sentences.
 
-Fresh install and local quality gates:
+No product code was changed by this verification worker.
+
+## Passing evidence
+
+- Mandatory cold first-read: **PASS** on desktop and 390×844 mobile. The page
+  says what it does, names parents after a first learning app, and shows the
+  one-click `Try it with sample data` action before the fold.
+- Claims gate: **18/18 PASS** after `npm ci`; every id is unique and appears in
+  exactly one tagged test.
+- Full local suite: `npm test` **PASS, 27/27**.
+- Exact production build: `npm run build` **PASS**; TypeScript passes and
+  `dist/` is produced. JS is 11.42KB gzip and CSS is 4.55KB gzip.
+- Functional demo: sample 13 cards/3 completions; all age bands expose 20;
+  three-step activities, twists, paper alternatives, completion persistence,
+  JSON export/import, invalid import recovery, empty age-band state, reset,
+  leaving-demo cleanup, progress tokens, and valid-license fixture all pass.
+- Privacy: a full normal demo flow made same-origin requests only. Explicit
+  invalid-license verification made only the documented Sociobot request and
+  displayed a visible recovery message. No analytics, CDN scripts/fonts,
+  accounts, ads, chat, console errors, or page errors were found.
+- Billing endpoint: fresh requests 1–30 returned 200; request 31 returned 429
+  with `Retry-After: 4`. The observed allowance is 30 per client window.
+- Links: all 26 discovered internal and external destinations passed; mailto
+  links were explicit.
+- PWA: live worker control, v7 shell cache, offline `/demo` reload, offline
+  notice, isolated IndexedDB, and independent update simulation all pass.
+  `updatefound`, `controllerchange`, and the visible update notice occurred.
+- Accessibility matrix: 28 checks over seven routes, both light/dark themes,
+  desktop/mobile, and reduced motion found zero serious/critical axe issues,
+  no overflow, one h1/main per route, and no page/console/request errors. Axe
+  does not cover the manual modal focus defect.
+- `/opt/fleet/lib/verify-url.sh`: **PASS** locally and live.
+- Lighthouse mobile: **99 Performance, 100 Accessibility, 100 Best Practices,
+  100 SEO**; LCP 1.2s, CLS 0, TBT 130ms, total transfer 67,739 bytes.
+- Response policy: CSP, HSTS, nosniff, strict-origin referrer policy,
+  Permissions-Policy, immutable hashed assets, no-store worker, and real
+  styled HTTP 404 all pass.
+- Deployment identity: SHA-256 matched for `index.html`, hashed JS/CSS,
+  `sw.js`, manifest, mobile hero, `404.html`, and `404.css`.
+
+## Reproduce locally
 
 ```sh
 npm ci
-npm test                 # 27/27 Chromium tests passed
-npm run build            # tsc --noEmit and Vite dist/ build passed
+npm test
+npm run build
+npm run preview
 ```
 
-Every literal command in `.factory/claims.json` was run separately after the
-clean install: all **18/18** passed. `git diff --check` passed; the claim
-registry check found 18 unique ids, no missing tags, and exactly one test per
-id. Production output is 11.42 KiB gzip JavaScript and 4.55 KiB gzip CSS.
+There is no separate lint script. The product is a static PWA, not a library,
+CLI, or backend. It has no sign-in, so consumer-package, backend persistence,
+and Entra authority checks do not apply.
 
-Browser and accessibility checks:
+## Next verification
 
-- `/opt/fleet/lib/verify-url.sh` passed against local preview and live root:
-  HTTP 200, title, `lang=en`, one h1, main landmark, image alt text, named
-  buttons, and zero page console errors.
-- Playwright axe at 390×844, reduced motion, passed with zero serious/critical
-  findings on `/`, `/demo`, `/settings?demo=1`, `/privacy?demo=1`,
-  `/terms?demo=1`, and `/print?demo=1` in both light and dark themes.
-- Live 390px keyboard path passed: Enter opened an activity dialog, Escape
-  restored focus to the card, and no horizontal overflow occurred.
-- Live normal demo activity use made same-origin requests only and had no
-  browser console errors.
-- The standalone `@axe-core/cli` Selenium Chrome launcher could not locate a
-  compatible system Chrome in this worker. The repository's Playwright axe
-  integration completed instead. Lighthouse 13's browser tab also crashed in
-  this disposable worker; the static transfer budgets above pass and previous
-  verified Lighthouse evidence remains in `.factory/verification-artifacts/`.
-
-PWA, response policy, and live identity:
-
-- Live `/demo` was service-worker controlled, then reloaded offline with 13
-  cards, the sample heading, and the offline notice.
-- A local browser-only worker update probe changed `sw.js`; `updatefound` and
-  `controllerchange` fired and the visible toast read “An update is ready.
-  Reload to use it.”
-- Live `/missing-tape` returned HTTP 404 with the production CSP, linked
-  `/404.css` (HTTP 200 `text/css`), rendered tape colour `rgb(184, 46, 46)`,
-  and had zero CSP errors. Chromium does report the normal HTTP-404 resource
-  diagnostic for a failed navigation; it is not a page error.
-- Live hashed assets use `Cache-Control: public, max-age=31536000, immutable`;
-  CSP, `nosniff`, and strict-origin referrer policy are present.
-- The license verification check returned 30 × 200 followed by 1 × 429 with
-  `Retry-After: 3`, preserving the observed allowance.
-- SHA-256 local/live identity matched for `index.html`, `404.html`, `404.css`,
-  `sw.js`, `manifest.webmanifest`, hashed JS/CSS, and the hero AVIF.
-
-## Known external limitation
-
-The printable-pack billing product is still not registered at Sociobot, so the
-app correctly shows no purchase link. Existing-license restoration remains
-available; registering billing is outside this static repository.
+After repairing the defects above, rerun every exact command in
+`.factory/claims.json`, `npm test`, `npm run build`, and the live manual
+Shift+Tab/Escape modal path. Recheck every mobile interactive box, both-theme
+axe, cold first-read, offline and update behavior, the 30-request endpoint
+allowance, Lighthouse, headers, links, and local/live hashes.
