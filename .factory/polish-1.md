@@ -14,6 +14,21 @@ Base review: `2b1494e33e9b7e8aa3f9ec4018a933fc62822d57`.
 
 ## Live recheck
 
-After deployment, cold-check `https://linux-kid-lab.sociobot.in/`,
-`/?demo=1`, `/demo`, `/privacy`, `/terms`, and a direct unknown URL. Record
-the deployed commit and results in this section before final handoff.
+Repair commit `91b48ae7372fd3e3a54824c1b5300401a06f3d53` was deployed by the
+factory static work-order deployer as Azure deployment
+`bda43591-af64-4a8f-837d-5f69be08e1f3`.
+
+| Live URL | Result |
+| --- | --- |
+| `https://linux-kid-lab.sociobot.in/` | Cold HTTP 200; expected landing title, one h1/main, no console errors. |
+| `https://linux-kid-lab.sociobot.in/?demo=1` | Cold HTTP 200; **Demo — Linux Kid Lab**, populated sample shelf, demo banner, and Reset demo control. Screenshot: `.factory/verification-artifacts/polish-1/live-demo/screenshot-desktop.png`. |
+| `https://linux-kid-lab.sociobot.in/demo` | Cold HTTP 200; same isolated sample shelf, banner, and reset control. |
+| `https://linux-kid-lab.sociobot.in/privacy` | Cold HTTP 200; Privacy title, one h1/main, no console errors. |
+| `https://linux-kid-lab.sociobot.in/terms` | Cold HTTP 200; Terms title, one h1/main, no console errors. |
+| `https://linux-kid-lab.sociobot.in/missing-tape` | HTTP 404; static cassette 404 with canonical, metadata, header, main, Privacy/Terms footer, one h1, and no console errors. |
+
+Factory URL verification evidence is in
+`.factory/verification-artifacts/polish-1/live-root/verify.json`. A live
+Playwright axe scan at 390×844 found zero serious or critical violations. Live
+Lighthouse measured performance 100, accessibility 100, LCP 1,050 ms, and
+CLS 0; evidence is `.factory/verification-artifacts/polish-1/lighthouse-live.json`.

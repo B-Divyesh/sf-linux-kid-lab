@@ -2,7 +2,8 @@
 
 ## Result
 
-Repair candidate for review commit `2b1494e33e9b7e8aa3f9ec4018a933fc62822d57`.
+Repair commit `91b48ae7372fd3e3a54824c1b5300401a06f3d53` for review commit
+`2b1494e33e9b7e8aa3f9ec4018a933fc62822d57`.
 The unpurchasable optional pack was removed rather than advertised without a
 checkout. Linux Kid Lab remains an offline, local-first PWA with the original
 cassette-zine visual system.
@@ -41,6 +42,27 @@ cassette-zine visual system.
   `.factory/verification-artifacts/polish-1/landing-mobile.png` and
   `.factory/verification-artifacts/polish-1/demo-desktop.png`.
 
+## Deployment and cold live evidence
+
+- Deployed `dist/` with the factory static deploy configuration on 29 August
+  2026. Azure deployment `bda43591-af64-4a8f-837d-5f69be08e1f3` completed
+  successfully to `https://lemon-bay-084d0d310.7.azurestaticapps.net`, with
+  the custom domain ready at `https://linux-kid-lab.sociobot.in`.
+- Factory URL verification on a cold live root load: HTTP 200, 603 ms, no
+  console/page errors, `lang="en"`, one h1, main landmark, zero missing image
+  alt attributes, and zero unlabeled buttons. Evidence:
+  `.factory/verification-artifacts/polish-1/live-root/verify.json`.
+- Cold live browser checks: `/`, `/?demo=1`, `/demo`, `/privacy`, and `/terms`
+  each returned 200 with the expected route title, one h1/main, and no console
+  errors. `/?demo=1` and `/demo` both showed the demo banner and **Reset demo**.
+  `/missing-tape` returned HTTP 404 with its static title, one h1/main, and no
+  console errors.
+- Live `/?demo=1` serious/critical axe check found zero violations. Screenshot:
+  `.factory/verification-artifacts/polish-1/live-demo/screenshot-desktop.png`.
+- Live Lighthouse (mobile): performance **100**, accessibility **100**, LCP
+  **1,050 ms**, and CLS **0**. Evidence:
+  `.factory/verification-artifacts/polish-1/lighthouse-live.json`.
+
 ## Run again
 
 ```sh
@@ -54,5 +76,4 @@ commands. Open `/demo` or `/?demo=1` to enter the isolated sample shelf.
 
 ## Remaining work
 
-No known product gaps. Deployment and cold live recheck are recorded in
-`.factory/polish-1.md` after the repair commit is pushed.
+No known gaps.
