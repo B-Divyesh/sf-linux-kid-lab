@@ -200,7 +200,7 @@ test('@claim:offline-reload the demo reloads after the network is disabled', asy
   await page.reload();
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   const cachedBytes = await page.evaluate(async () => {
-    const cache = await caches.open('linux-kid-lab-v9');
+    const cache = await caches.open('linux-kid-lab-v10');
     const keys = await cache.keys();
     const assets = keys.filter(key => /\/assets\/.*\.(js|css)$/.test(new URL(key.url).pathname));
     return Promise.all(assets.map(async asset => (await (await cache.match(asset))?.text())?.length ?? 0));
@@ -240,34 +240,8 @@ test('activity dialog contains immediate reverse-Tab, handles global Escape, and
   await expectNoSeriousAxeIssues(page);
 });
 
-test('@claim:paid-pack license verification activates the paid print pack', async ({ page }) => {
-  await page.route('https://api.sociobot.in/api/v1/products/linux-kid-lab/verify?license=test-license', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ valid: true, reason: 'ok', expires_at: null })
-  }));
-  await page.goto('/demo');
-  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
-  await expect(page).toHaveURL(/\/?demo=1/);
-  await expect(page.getByText('A one-time $12 pack license adds cut-out activity cards and a four-week weekend mix.')).toBeVisible();
-  await page.getByText('Have a license?').click();
-  await page.getByLabel('Paste your license').fill('test-license');
-  await page.getByRole('button', { name: 'Verify license' }).click();
-  await expect(page.getByText('Pack active on this device')).toBeVisible();
-  await page.getByRole('link', { name: 'Print the activity pack' }).click();
-  await expect(page.locator('.print-card-grid article')).toHaveCount(20);
-  await expect(page.getByRole('heading', { name: 'Four-week weekend mix' })).toBeVisible();
-  await expect(page.locator('.weekend-mix li')).toHaveText([
-    'Week 1: Shape creature and maze message',
-    'Week 2: Loop beat and secret alphabet',
-    'Week 3: Moon postcard and one-button toy',
-    'Week 4: Paper controller and remix rules'
-  ]);
-});
-
 test('@claim:no-accounts-or-ads the demo asks for no account and contains no ads or chat', async ({ page }) => {
-  await page.goto('/demo');
-  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
+  await page.goto('/privacy?demo=1');
   await expect(page.getByText('There are no accounts, ads, chat, scores, or behavior tracking.')).toBeVisible();
   await expect(page.locator('input[type="password"], iframe, [role="dialog"][aria-label*="chat" i]')).toHaveCount(0);
   const sources = await page.locator('[src]').evaluateAll(nodes => nodes.map(node => node.getAttribute('src')));
@@ -285,22 +259,6 @@ test('@claim:local-age-bands parent age choices remain in the demo browser after
   await expect(page.getByLabel('Ages 11–13')).toBeChecked();
 });
 
-test('@claim:license-privacy an explicit license check sends a token only to Sociobot billing', async ({ page }) => {
-  const requests: string[] = [];
-  page.on('request', request => requests.push(request.url()));
-  await page.route('https://api.sociobot.in/api/v1/products/linux-kid-lab/verify?license=test-license', route => route.fulfill({
-    status: 200, contentType: 'application/json', body: JSON.stringify({ valid: false, reason: 'invalid' })
-  }));
-  await page.goto('/demo');
-  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
-  await page.getByText('Have a license?').click();
-  await page.getByLabel('Paste your license').fill('test-license');
-  await page.getByRole('button', { name: 'Verify license' }).click();
-  await expect(page.getByText('This license is not active. Check the token or use the buy link.')).toBeVisible();
-  const external = requests.filter(url => new URL(url).origin !== 'http://127.0.0.1:4173');
-  expect(external).toEqual(['https://api.sociobot.in/api/v1/products/linux-kid-lab/verify?license=test-license']);
-});
-
 test('mobile first-read shows the demo action before the fold', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
@@ -309,23 +267,13 @@ test('mobile first-read shows the demo action before the fold', async ({ page })
   expect(action!.y + action!.height).toBeLessThanOrEqual(844);
 });
 
-test('invalid license recovery remains open and visible', async ({ page }) => {
-  await page.route('https://api.sociobot.in/api/v1/products/linux-kid-lab/verify?license=not-active', route => route.fulfill({
-    status: 200, contentType: 'application/json', body: JSON.stringify({ valid: false, reason: 'invalid' })
-  }));
-  await page.goto('/demo');
-  await page.getByRole('link', { name: 'Linux Kid Lab home' }).click();
-  await page.getByText('Have a license?').click();
-  await page.getByLabel('Paste your license').fill('not-active');
-  await page.getByRole('button', { name: 'Verify license' }).click();
-  await expect(page.locator('details')).toHaveAttribute('open', '');
-  await expect(page.getByText('This license is not active. Check the token or use the buy link.')).toBeVisible();
-});
-
-test('@claim:purchase-setup an unavailable purchase setup does not show a dead checkout link', async ({ page }) => {
-  await page.goto('/');
-  await expect(page.getByText('Purchase setup is unavailable right now. The free shelf and progress tokens remain available.')).toBeVisible();
-  await expect(page.locator('a[href*="api.sociobot.in/api/v1/products/linux-kid-lab/checkout"]')).toHaveCount(0);
+test('the direct ?demo=1 entry opens the populated sample shelf', async ({ page }) => {
+  await page.goto('/?demo=1');
+  await expect(page).toHaveTitle('Demo — Linux Kid Lab');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Pick the sample family’s next activity');
+  await expect(page.getByLabel('Demo mode')).toBeVisible();
+  await expect(page.locator('.activity-card')).toHaveCount(13);
+  await expect(page.getByRole('button', { name: 'Reset demo' })).toBeVisible();
 });
 
 test('static deployment config gives unknown paths a real 404 and hashes get immutable caching', () => {
@@ -355,6 +303,13 @@ test('a real static 404 keeps its cassette styling under style-src self without 
   expect(response?.status()).toBe(404);
   await expect(page.locator('style')).toHaveCount(0);
   await expect(page.locator('link[rel="stylesheet"]')).toHaveAttribute('href', '/404.css');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://linux-kid-lab.sociobot.in/404');
+  await expect(page.locator('meta[name="description"]')).toHaveCount(1);
+  await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', 'https://linux-kid-lab.sociobot.in/social-card.webp');
+  await expect(page.locator('header .wordmark')).toHaveText(/Linux Kid Lab/);
+  await expect(page.locator('footer a[href="/privacy"]')).toHaveCount(1);
+  await expect(page.locator('footer a[href="/terms"]')).toHaveCount(1);
+  await expect(page.locator('main')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('This tape has no activity');
   await expect(page.locator('.tape')).toHaveCSS('color', 'rgb(184, 46, 46)');
   // Chromium reports an HTTP 404 navigation as a resource error. It is not a

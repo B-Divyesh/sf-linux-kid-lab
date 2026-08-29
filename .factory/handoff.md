@@ -1,31 +1,47 @@
-# Linux Kid Lab — review 1 handoff
+# Linux Kid Lab — polish 1 handoff
 
 ## Result
 
-**FAIL.** This reviewer made no product-code changes. The committed review is
-`.factory/review-1.md`.
+Repair candidate for review commit `2b1494e33e9b7e8aa3f9ec4018a933fc62822d57`.
+The unpurchasable optional pack was removed rather than advertised without a
+checkout. Linux Kid Lab remains an offline, local-first PWA with the original
+cassette-zine visual system.
 
-## What was verified
+## What changed
 
-- Cold live landing review at 390×844 and 1440×900; the job, audience, and
-  first action are clear and the mobile CTA is above the fold.
-- One-click live demo: populated sample shelf, persistent sandbox banner,
-  reset/start-real controls, and separate demo-storage behavior.
-- `npm ci`; all 18 exact claim commands from `.factory/claims.json`; `npm test`
-  (54/54); and `npm run build` (creates `dist/`).
-- Live routes, titles, canonical URLs, h1/main counts, direct HTTP 404, link
-  crawl, response headers, and normal-demo request origins.
-- Every earlier verification/handoff finding was rechecked against both the
-  live site and current code.
+- `/demo` and `/?demo=1` now both open the isolated, pre-filled sample shelf.
+  The persistent banner offers **Reset demo** and **Start for real**.
+- Removed every paid-pack, license, merchant, and refund promise from the app,
+  README, terms, claims, tests, data flow, and CSP.
+- Rewrote the reviewed headings and README in direct language. The complete,
+  current copy audit is in `.factory/copy-audit.md`.
+- Rebuilt the static HTTP 404 as a full cassette-zine product page with skip
+  link, header, navigation, footer, legal links, title, canonical URL,
+  description, Open Graph/Twitter metadata, and favicon.
+- Added and reconciled `.factory/claims.json` with 15 one-to-one Playwright
+  claim tests. Version is 1.0.4; the service-worker cache is v10.
 
-## Remaining work
+## Local evidence
 
-See `F-1-1` through `F-1-6` in `.factory/review-1.md`. The blocking items are
-the unavailable advertised paid purchase path and the incomplete/stale
-mandatory copy-audit record. The direct static 404 also lacks the required
-site header/footer and route metadata.
+- Clean dependency install: `npm ci` — passed, 0 vulnerabilities.
+- Production build: `npm run build` — passed; `dist/index.html` is present.
+  Initial JavaScript is 10.13 kB gzip and CSS is 4.61 kB gzip.
+- Complete browser suite: `npm test` — **51 passed** in 50.6 seconds.
+- Every literal claim command from `.factory/claims.json` — **15/15 passed**.
+  The claim-tag audit also confirms exactly one test for each claim.
+- Accessibility and responsive checks are part of the 51-test run: axe found
+  no serious or critical issues across 28 route/theme/viewport checks; keyboard
+  dialog behavior, reduced motion, 44px targets, mobile reflow, titles, h1,
+  and main landmarks passed.
+- Offline verification: `@claim:offline-reload` passed after service-worker
+  control and `context.setOffline(true)` reload.
+- Privacy verification: `@claim:local-privacy` passed with only same-origin
+  requests during demo use.
+- Local visual evidence:
+  `.factory/verification-artifacts/polish-1/landing-mobile.png` and
+  `.factory/verification-artifacts/polish-1/demo-desktop.png`.
 
-## Re-run
+## Run again
 
 ```sh
 npm ci
@@ -33,6 +49,10 @@ npm test
 npm run build
 ```
 
-Run every literal `test` command in `.factory/claims.json`, then use a fresh
-browser context for the live 390 px landing, `/demo`, all app routes, and a
-direct unknown URL.
+Run every `test` value in `.factory/claims.json` for the individual claim
+commands. Open `/demo` or `/?demo=1` to enter the isolated sample shelf.
+
+## Remaining work
+
+No known product gaps. Deployment and cold live recheck are recorded in
+`.factory/polish-1.md` after the repair commit is pushed.

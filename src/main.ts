@@ -4,23 +4,14 @@ import { activities, bands, toolLinks, type Activity, type Band } from './activi
 import { clearDemo, demoState, freshState, loadState, saveState, type LabState } from './storage';
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
-const slug = 'linux-kid-lab';
 let demo = location.pathname === '/demo' || new URLSearchParams(location.search).get('demo') === '1';
 let state: LabState = freshState();
 let activeActivity: Activity | null = null;
 let statusMessage = '';
 let importError = '';
-let licenseNotice = '';
-let licenseDetailsOpen = false;
 let lastActivityId = '';
 
 const escapeHtml = (value: string) => value.replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]!));
-const licenseTokenKey = () => `${demo ? 'demo:' : ''}sb_license:${slug}`;
-const licenseStatusKey = () => `${demo ? 'demo:' : ''}sb_license_status:${slug}`;
-const isLicensed = () => {
-  try { return JSON.parse(localStorage.getItem(licenseStatusKey()) || 'null')?.valid === true; }
-  catch { return false; }
-};
 
 function paperAlternative(kind: Activity['kind']) {
   const alternatives: Record<Activity['kind'], string> = {
@@ -35,6 +26,7 @@ function paperAlternative(kind: Activity['kind']) {
 
 function routePath() {
   const known = ['/', '/demo', '/settings', '/privacy', '/terms', '/print', '/404'];
+  if (demo && location.pathname === '/') return '/demo';
   return known.includes(location.pathname) ? location.pathname : '/404';
 }
 
@@ -63,9 +55,9 @@ function header() {
 }
 
 function footer() {
-  return `<footer><p><strong>Linux Kid Lab</strong> offers short local activities for young makers.</p>
+  return `<footer><p><strong>Linux Kid Lab</strong> lists short creative activities for Linux families.</p>
     <nav aria-label="Footer navigation"><a href="/privacy" data-nav>Privacy</a><a href="/terms" data-nav>Terms</a><a href="https://hello-factory.sociobot.in/" rel="external">Built by Param Factory <span class="sr-only">(external)</span></a></nav>
-    <p>Version ${packageMetadata.version}. Generated illustration details are in the <a href="https://github.com/B-Divyesh/sf-linux-kid-lab" rel="external">project notes <span class="sr-only">(external)</span></a>.</p></footer>`;
+    <p>Version ${packageMetadata.version}. <a href="https://github.com/B-Divyesh/sf-linux-kid-lab" rel="external">Project notes <span class="sr-only">(external)</span></a>.</p></footer>`;
 }
 
 function shell(content: string) {
@@ -86,7 +78,7 @@ function facts() {
 function progressStrip() {
   const count = Object.keys(state.completed).length;
   return `<div class="progress-strip" aria-label="Activity progress">
-    <div><span class="eyebrow">Your tape counter</span><strong>${count} of ${activities.length}</strong><span>activities made</span></div>
+    <div><span class="eyebrow">Your activity progress</span><strong>${count} of ${activities.length}</strong><span>activities made</span></div>
     <progress class="meter" value="${count}" max="${activities.length}" aria-label="${count} of ${activities.length} activities made">${count} of ${activities.length}</progress>
     <a class="small-link" href="/print" data-nav>Print progress tokens</a>
   </div>`;
@@ -108,7 +100,7 @@ function activityShelf(showIntro = true) {
   const visible = activities.filter(a => state.bands.includes(a.band));
   const cards = visible.length ? visible.map(activityCard).join('') : `<div class="empty-state"><span aria-hidden="true">□ □ □</span><h3>Your shelf is empty</h3><p>Choose at least one age band to see activities.</p><a class="button secondary" href="/settings" data-nav>Choose age bands</a></div>`;
   return `<section id="activities" class="activity-section" aria-labelledby="activity-heading">
-    ${showIntro ? `<div class="section-heading"><span class="eyebrow">The activity shelf</span><h2 id="activity-heading">Pick one thing to make</h2><p>Each card has three steps and one open tool suggestion.</p></div>` : `<h2 id="activity-heading" class="sr-only">Sample activity shelf</h2>`}
+    ${showIntro ? `<div class="section-heading"><span class="eyebrow">The activity shelf</span><h2 id="activity-heading">Choose an activity</h2><p>Each card has three steps and one open tool suggestion.</p></div>` : `<h2 id="activity-heading" class="sr-only">Sample activity shelf</h2>`}
     <div class="filter-row" aria-label="Age band filters">${bands.map(b => `<button class="filter ${state.bands.includes(b) ? 'selected' : ''}" data-band="${b}" aria-pressed="${state.bands.includes(b)}">Ages ${b}</button>`).join('')}<span>${visible.length} activities</span></div>
     <div class="activity-grid">${cards}</div>
   </section>`;
@@ -118,7 +110,7 @@ function landing() {
   return shell(`<main id="main">
     <section class="hero poster-tear">
       <div class="hero-copy">
-        <span class="kicker">A calm shelf for Linux families</span>
+        <span class="kicker">Creative activities for Linux families</span>
         <h1 tabindex="-1">Pick one creative activity after school</h1>
         <p class="lede">For parents whose child needs a next step after their first learning app.</p>
         <div class="hero-action"><a class="button primary" href="/demo" data-nav>Try it with sample data</a><span>Loads a sample family’s activity shelf.</span></div>
@@ -128,24 +120,15 @@ function landing() {
     </section>
     ${progressStrip()}
     ${activityShelf()}
-    <section class="steps-section" aria-labelledby="how-heading"><div class="section-heading"><span class="eyebrow">How it works</span><h2 id="how-heading">From “what now?” to making</h2></div>
+    <section class="steps-section" aria-labelledby="how-heading"><div class="section-heading"><span class="eyebrow">How it works</span><h2 id="how-heading">How it works</h2></div>
       <ol class="steps"><li><strong>Choose ages</strong><span>A parent picks one or more age bands.</span></li><li><strong>Pick a card</strong><span>A child follows three short steps.</span></li><li><strong>Stamp it made</strong><span>The device saves progress for next time.</span></li></ol>
     </section>
-    <section class="privacy-block" aria-labelledby="boundaries-heading"><div><span class="eyebrow">Clear boundaries</span><h2 id="boundaries-heading">A launcher, not a lesson plan</h2></div><div><p>There are no accounts, ads, chat, scores, or behavior tracking.</p><p>Tool links may need an installed app or internet access. Every activity also works with paper.</p><a href="/privacy" data-nav>Read the privacy note</a></div></section>
-    ${paidSection()}
+    <section class="privacy-block" aria-labelledby="boundaries-heading"><div><span class="eyebrow">Privacy and limits</span><h2 id="boundaries-heading">What this activity shelf does not do</h2></div><div><p>There are no accounts, ads, chat, scores, or behavior tracking.</p><p>Tool links may need an installed app or internet access. Every activity also works with paper.</p><a href="/privacy" data-nav>Read the privacy note</a></div></section>
   </main>`);
 }
 
 function demoPage() {
   return shell(`<main id="main" class="demo-main"><section class="demo-intro"><span class="kicker">Sample shelf for ages 8–13</span><h1 tabindex="-1">Pick the sample family’s next activity</h1><p>Three activities are complete. Open another card to see every step.</p></section>${progressStrip()}${activityShelf(false)}</main>`);
-}
-
-function paidSection() {
-  const licensed = isLicensed();
-  return `<section class="paid-section" aria-labelledby="pack-heading"><div class="price-sticker"><span>$12</span><small>one time</small></div><div><span class="eyebrow">Optional take-home pack</span><h2 id="pack-heading">Print the whole activity deck</h2><p>The free shelf includes all 20 activities and progress tokens.</p><p>A one-time $12 pack license adds cut-out activity cards and a four-week weekend mix.</p>
-    ${licensed ? `<p class="license-ok">✓ Pack active on this device</p><a class="button primary" href="/print?pack=1" data-nav>Print the activity pack</a>` : `<p class="purchase-unavailable" role="status">Purchase setup is unavailable right now. The free shelf and progress tokens remain available.</p>`}
-    <details ${licenseDetailsOpen ? 'open' : ''}><summary>Have a license?</summary><form id="license-form"><label for="license">Paste your license</label><div class="inline-form"><input id="license" name="license" autocomplete="off" required><button class="button secondary" type="submit" aria-label="Verify license">Verify license</button></div><p class="form-note">Verification uses Sociobot billing. The free shelf stays available offline.</p><p class="error" role="status">${escapeHtml(licenseNotice)}</p></form></details>
-    <p class="legal-note">Sociobot is the merchant of record. Refunds are handled there. See <a href="/terms" data-nav>terms</a>.</p></div></section>`;
 }
 
 function activityDialog(activity: Activity) {
@@ -170,21 +153,18 @@ function settingsPage() {
 }
 
 function printPage() {
-  const packRequested = new URLSearchParams(location.search).get('pack') === '1';
-  const packAllowed = packRequested && isLicensed();
   const complete = activities.filter(a => state.completed[a.id]);
   return shell(`<main id="main" class="print-page"><div class="print-toolbar"><div><span class="kicker">Print at 100% scale</span><h1 tabindex="-1">Cut out your progress tokens</h1></div><button class="button primary" data-action="print">Print this sheet</button></div>
     ${complete.length ? `<section aria-labelledby="token-heading"><h2 id="token-heading">Made by me</h2><div class="token-grid">${complete.map(a => `<article class="token"><span aria-hidden="true">★</span><strong>${escapeHtml(a.title)}</strong><small>${escapeHtml(state.completed[a.id])}</small></article>`).join('')}</div></section>` : `<section class="empty-state"><h2>No tokens yet</h2><p>Finish one activity to add its token here.</p><a class="button secondary" href="/#activities">Pick an activity</a></section>`}
-    ${packAllowed ? `<section class="pack-print" aria-labelledby="deck-heading"><h2 id="deck-heading">Take-home activity deck</h2><div class="print-card-grid">${activities.map(a => `<article><span>Ages ${a.band} · ${a.minutes} min</span><h3>${escapeHtml(a.title)}</h3><ol>${a.steps.map(s=>`<li>${escapeHtml(s)}</li>`).join('')}</ol></article>`).join('')}</div><h2>Four-week weekend mix</h2><ol class="weekend-mix"><li>Week 1: Shape creature and maze message</li><li>Week 2: Loop beat and secret alphabet</li><li>Week 3: Moon postcard and one-button toy</li><li>Week 4: Paper controller and remix rules</li></ol></section>` : packRequested ? `<section class="empty-state"><h2>The activity deck needs a pack license</h2><p>Progress tokens remain free.</p><a class="button primary" href="/#pack-heading">See the $12 pack</a></section>` : ''}
   </main>`);
 }
 
 function privacyPage() {
-  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 28 August 2026</span><h1 tabindex="-1">Your activity data stays in this browser</h1><p>Linux Kid Lab stores age choices, completed activities, and twists in IndexedDB on this device.</p><h2>What leaves this device</h2><p>Nothing leaves during normal activity use. The site has no analytics, ads, accounts, or chat.</p><p>Official tool links open another website. That website has its own privacy policy.</p><p>License verification sends only your license token to Sociobot billing. It runs after you paste or receive a license.</p><h2>Delete or move your data</h2><p>Parent setup can export a JSON copy or clear saved progress. Browser storage controls can also remove everything.</p><h2>Demo data</h2><p>Demo mode uses a separate IndexedDB database named <code>demo:linux-kid-lab</code>. Leaving or resetting the demo discards it.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></main>`);
+  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Your activity data stays in this browser</h1><p>Linux Kid Lab stores age choices, completed activities, and twists in IndexedDB on this device.</p><h2>What leaves this device</h2><p>Nothing leaves during normal activity use.</p><p>There are no accounts, ads, chat, scores, or behavior tracking.</p><p>Official tool links open another website. That website has its own privacy policy.</p><h2>Delete or move your data</h2><p>Parent setup can export a JSON copy or clear saved progress. Browser storage controls can also remove everything.</p><h2>Demo data</h2><p>Demo mode uses a separate IndexedDB database named <code>demo:linux-kid-lab</code>. Leaving or resetting the demo discards it.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p></main>`);
 }
 
 function termsPage() {
-  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Terms for using Linux Kid Lab</h1><p>You may use the free activities at home, in a classroom, or in a community group.</p><h2>Parent supervision</h2><p>An adult decides which external tools and websites a child may open. Follow each tool’s own terms.</p><h2>Activity pack licenses</h2><p>A one-time $12 pack license adds printable activity cards and a weekend mix. It does not remove the free activities or progress tokens.</p><p>Sociobot is the merchant of record. A refund revokes the pack license.</p><h2>No warranty</h2><p>The site is provided as available. Keep your exported copy if saved progress matters to you.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p></main>`);
+  return shell(`<main id="main" class="text-page"><span class="kicker">Last updated 29 August 2026</span><h1 tabindex="-1">Terms for using Linux Kid Lab</h1><p>You may use the activities at home, in a classroom, or in a community group.</p><h2>Parent supervision</h2><p>An adult decides which external tools and websites a child may open. Follow each tool’s own terms.</p><h2>No warranty</h2><p>The site is provided as available. Keep an exported copy if saved progress matters to you.</p><h2>Contact</h2><p>Questions can go to <a href="mailto:support@sociobot.in">support@sociobot.in</a>.</p></main>`);
 }
 
 function notFoundPage() {
@@ -237,21 +217,6 @@ function announce(message: string) {
   window.setTimeout(() => { statusMessage = ''; const toast = document.querySelector('.toast'); toast?.classList.remove('show'); }, 3200);
 }
 
-async function verifyLicense(token: string) {
-  licenseDetailsOpen = true;
-  licenseNotice = 'Checking the license…'; render();
-  try {
-    const response = await fetch(`https://api.sociobot.in/api/v1/products/${slug}/verify?license=${encodeURIComponent(token)}`);
-    const result = await response.json() as {valid:boolean; reason?:string};
-    localStorage.setItem(licenseStatusKey(), JSON.stringify({valid:result.valid, checkedAt:Date.now()}));
-    if (result.valid) { licenseNotice = 'License verified. The print pack is ready.'; }
-    else { licenseNotice = 'This license is not active. Check the token or use the buy link.'; }
-  } catch {
-    licenseNotice = 'The license could not be checked. Connect to the internet and try again.';
-  }
-  render();
-}
-
 function bindEvents() {
   document.querySelectorAll<HTMLAnchorElement>('a[data-nav]').forEach(link => link.addEventListener('click', event => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || link.target) return;
@@ -276,9 +241,9 @@ function bindEvents() {
     if (action === 'close-dialog') { event.stopPropagation(); closeActivity(); }
     if (action === 'new-twist' && activeActivity) { state.twists[activeActivity.id] = ((state.twists[activeActivity.id] ?? 0) + 1) % 3; await saveState(state,demo); render(); }
     if (action === 'complete' && activeActivity) { state.completed[activeActivity.id] = new Date().toISOString().slice(0,10); await saveState(state,demo); const title=activeActivity.title; activeActivity=null; announce(`${title} is stamped made.`); }
-    if (action === 'reset-demo') { await clearDemo(); localStorage.removeItem(`demo:sb_license:${slug}`); localStorage.removeItem(`demo:sb_license_status:${slug}`); state=demoState(); await saveState(state,true); announce('Sample data reset.'); }
+    if (action === 'reset-demo') { await clearDemo(); state=demoState(); await saveState(state,true); announce('Sample data reset.'); }
     if (action === 'clear-demo-progress') { state={...state,completed:{},twists:{}}; await saveState(state,true); announce('Sample progress cleared.'); }
-    if (action === 'start-real') { await clearDemo(); localStorage.removeItem(`demo:sb_license:${slug}`); localStorage.removeItem(`demo:sb_license_status:${slug}`); go('/'); }
+    if (action === 'start-real') { await clearDemo(); go('/'); }
     if (action === 'export') exportData();
     if (action === 'reset-real' && confirm('Clear every completed activity and age choice on this device?')) { state=freshState(); await saveState(state,false); announce('Saved progress cleared.'); }
     if (action === 'print') window.print();
@@ -287,8 +252,6 @@ function bindEvents() {
   settingsForm?.addEventListener('submit', async event => { event.preventDefault(); state.bands = [...new FormData(settingsForm).getAll('band')] as Band[]; await saveState(state,demo); announce('Age bands saved.'); });
   const importFile = document.querySelector<HTMLInputElement>('#import-file');
   importFile?.addEventListener('change', () => importData(importFile.files?.[0]));
-  const licenseForm = document.querySelector<HTMLFormElement>('#license-form');
-  licenseForm?.addEventListener('submit', event => { event.preventDefault(); const token=String(new FormData(licenseForm).get('license')||'').trim(); if(token){ licenseDetailsOpen=true; localStorage.setItem(licenseTokenKey(),token); verifyLicense(token); } });
 }
 
 function trapDialogFocus(event: KeyboardEvent) {
@@ -330,24 +293,16 @@ function updateOnlineState() {
   if(chip) chip.hidden=navigator.onLine;
 }
 
-async function handleIncomingLicense() {
-  const params=new URLSearchParams(location.search); const token=params.get('license');
-  if(token){ localStorage.setItem(licenseTokenKey(),token); params.delete('license'); history.replaceState({},'',`${location.pathname}${params.size?'?'+params:''}${location.hash}`); await verifyLicense(token); return; }
-  const stored=localStorage.getItem(licenseTokenKey()); if(!stored) return;
-  try { const cache=JSON.parse(localStorage.getItem(licenseStatusKey())||'null'); if(!cache || Date.now()-cache.checkedAt>86_400_000) void verifyLicense(stored); } catch { void verifyLicense(stored); }
-}
-
 async function start() {
   try { state=await loadState(demo); }
   catch { state=demo?demoState():freshState(); statusMessage='Saved progress could not be opened. This visit will not be saved.'; }
   render();
-  await handleIncomingLicense();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').then(reg => {
     reg.addEventListener('updatefound',()=>{ const worker=reg.installing; worker?.addEventListener('statechange',()=>{ if(worker.state==='installed'&&navigator.serviceWorker.controller) announce('An update is ready. Reload to use it.'); }); });
   }).catch(()=>{});
 }
 
-addEventListener('popstate', async () => { const nextDemo=location.pathname==='/demo'; if(nextDemo!==demo){demo=nextDemo;state=await loadState(demo);} activeActivity=null;render(true); });
+addEventListener('popstate', async () => { const nextDemo=location.pathname==='/demo' || new URLSearchParams(location.search).get('demo')==='1'; if(nextDemo!==demo){demo=nextDemo;state=await loadState(demo);} activeActivity=null;render(true); });
 addEventListener('online',updateOnlineState); addEventListener('offline',updateOnlineState);
 addEventListener('keydown', trapDialogFocus);
 start();
